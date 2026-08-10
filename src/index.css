@@ -55,12 +55,18 @@ button {
    ⚠️ --qr-half 를 0.34초보다 짧게 두지 마세요.
       화면 대부분을 덮는 적·청색 점멸이 초당 3회를 넘으면
       광과민성 발작 유발 기준(WCAG 2.3.1)에 걸립니다.
-      지금 0.4초 = 초당 2.5회로, 기준 안에서 낼 수 있는 가장 빠른 속도입니다.
-      불특정 다수·미성년 관람객이 오는 부스라 이 선은 지켜야 합니다.        */
+      지금 0.35초 = 초당 2.9회로, 기준 안에서 낼 수 있는 거의 최대치입니다.
+      불특정 다수·미성년 관람객이 오는 부스라 이 선은 지켜야 합니다.
+
+   ★ 더 다급하게 보이게 하는 방법은 렌즈 연사입니다.
+     위 기준은 '화면의 25% 이상을 덮는' 점멸에만 적용됩니다.
+     경광봉 렌즈는 화면의 6% 정도라 해당되지 않으므로,
+     렌즈만 실제 LED 경광봉처럼 다다다닥 치게 했습니다(qr-lens-red/blue).
+     빔·화면 물듦·글씨는 --qr-half 를 따라 안전한 속도로 움직입니다.      */
 
 :root {
-  --qr-rev: 0.8s;
-  --qr-half: 0.4s;
+  --qr-rev: 0.7s;
+  --qr-half: 0.35s;
   --qr-red: 255, 45, 60;
   --qr-blue: 64, 132, 255;
 }
@@ -146,41 +152,91 @@ button {
 .qr-seg-red .qr-seg-lens {
   background: linear-gradient(180deg, #ff7078 0%, #f01223 46%, #8e0009 100%);
   box-shadow: 0 0 22px 5px rgba(var(--qr-red), 0.85);
-  animation: qr-lens-red var(--qr-rev) ease-in-out infinite;
+  animation: qr-lens-red var(--qr-rev) linear infinite;
 }
 
 .qr-seg-blue .qr-seg-lens {
   background: linear-gradient(180deg, #85b9ff 0%, #1258e8 46%, #062059 100%);
   box-shadow: 0 0 22px 5px rgba(var(--qr-blue), 0.85);
-  animation: qr-lens-blue var(--qr-rev) ease-in-out infinite;
+  animation: qr-lens-blue var(--qr-rev) linear infinite;
 }
 
-/* 꺼져도 렌즈는 어렴풋이 보입니다(완전히 사라지면 구멍처럼 보임) */
+/*
+  렌즈 연사 — 짧게 세 번 치고 한 번 길게 물었다가 반대쪽으로 넘깁니다.
+  실제 LED 경광봉이 이 패턴으로 칩니다. 이게 '다급함'을 만듭니다.
+  꺼져도 완전히 죽이지 않습니다(0.1). 새까맣게 꺼지면 구멍처럼 보입니다.
+*/
 @keyframes qr-lens-red {
   0%,
-  38% {
+  4% {
     opacity: 1;
   }
-  50%,
-  88% {
-    opacity: 0.14;
+  5%,
+  8% {
+    opacity: 0.1;
   }
+  9%,
+  13% {
+    opacity: 1;
+  }
+  14%,
+  17% {
+    opacity: 0.1;
+  }
+  18%,
+  22% {
+    opacity: 1;
+  }
+  23%,
+  26% {
+    opacity: 0.1;
+  }
+  27%,
+  44% {
+    opacity: 1;
+  }
+  45%,
   100% {
-    opacity: 1;
+    opacity: 0.1;
   }
 }
 
 @keyframes qr-lens-blue {
   0%,
-  38% {
-    opacity: 0.14;
+  49% {
+    opacity: 0.1;
   }
   50%,
-  88% {
+  54% {
     opacity: 1;
   }
+  55%,
+  58% {
+    opacity: 0.1;
+  }
+  59%,
+  63% {
+    opacity: 1;
+  }
+  64%,
+  67% {
+    opacity: 0.1;
+  }
+  68%,
+  72% {
+    opacity: 1;
+  }
+  73%,
+  76% {
+    opacity: 0.1;
+  }
+  77%,
+  94% {
+    opacity: 1;
+  }
+  95%,
   100% {
-    opacity: 0.14;
+    opacity: 0.1;
   }
 }
 

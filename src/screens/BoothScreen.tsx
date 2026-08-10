@@ -1,6 +1,14 @@
+import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { ui } from '../lib/content'
 import { lines } from '../lib/format'
 import Mascot from '../components/Mascot'
+
+/** 아래에서 밀려 올라오며 나타나는 공통 등장 동작 */
+const rise: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+}
 
 /**
  * [4] 부스 유도.
@@ -16,29 +24,48 @@ export default function BoothScreen() {
       <div className="qr-vignette" />
       <div className="qr-grain" />
 
-      <div className="relative flex h-full flex-col items-center justify-center px-6 pb-14">
-        <Mascot size={106} outline={false} />
+      <motion.div
+        className="relative flex h-full flex-col items-center justify-center px-6 pb-14"
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.13 } } }}
+      >
+        <motion.div variants={rise}>
+          <Mascot size={106} outline={false} />
+        </motion.div>
 
         <div className="mt-7 w-full max-w-[400px] text-center">
           {booth.lines.map((line, i) => (
-            <p
+            <motion.p
               key={i}
+              variants={rise}
               className="text-[28px] leading-[1.3] font-black tracking-tight text-white"
             >
               {line}
-            </p>
+            </motion.p>
           ))}
 
-          <p className="mt-5 text-[17px] leading-relaxed text-white/70">
+          <motion.p variants={rise} className="mt-5 text-[17px] leading-relaxed text-white/70">
             {lines(booth.sub).map((line, i) => (
               <span key={i} className="block">
                 {line}
               </span>
             ))}
-          </p>
+          </motion.p>
 
-          <div className="mt-8 flex items-center justify-center gap-2.5 border border-white/25 px-4 py-4">
-            <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" className="shrink-0">
+          <motion.div
+            variants={rise}
+            className="mt-8 flex items-center justify-center gap-2.5 border border-white/25 px-4 py-4"
+          >
+            <motion.svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              aria-hidden="true"
+              className="shrink-0"
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
               <path
                 d="M3 11h15M12 5l6 6-6 6"
                 fill="none"
@@ -47,19 +74,22 @@ export default function BoothScreen() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-            </svg>
+            </motion.svg>
             <span className="text-[17px] leading-snug font-bold text-white">{booth.zone}</span>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 경품 안내는 화면 아래에 밝게 — 관람객이 마지막으로 챙겨야 할 정보입니다 */}
-      <div
+      <motion.div
         className="absolute inset-x-0 bottom-0 bg-white px-6 pt-5 text-center"
         style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7, ease: 'easeOut' }}
       >
         <p className="text-[17px] font-bold text-[#0a0b12]">{booth.goods}</p>
-      </div>
+      </motion.div>
     </div>
   )
 }

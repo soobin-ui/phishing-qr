@@ -108,6 +108,20 @@ await shot('question-b')
 await wait(200)
 await shot('question-c')
 
+// 절반쯤 밀었을 때 — 경광봉과 글씨가 서로 다른 속도로 따라 올라가는지.
+// 스냅이 걸려 있으면 중간 위치가 유지되지 않으므로 캡처 동안만 꺼둡니다.
+await page.evaluate(() => {
+  const s = document.querySelector('.snap-y')
+  s.style.scrollSnapType = 'none'
+  s.scrollTop = s.clientHeight * 0.45
+})
+await wait(500)
+await shot('scroll-mid')
+await page.evaluate(() => {
+  const s = document.querySelector('.snap-y')
+  s.style.scrollSnapType = ''
+})
+
 // 아래로 밀면 나오는 마지막 한 마디
 await page.evaluate(() => {
   const s = document.querySelector('.snap-y')

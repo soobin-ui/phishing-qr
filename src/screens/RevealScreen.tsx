@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { reveal } from '../lib/content'
 import { buildCards, buzz } from '../lib/reveal'
 import { startAlarm } from '../lib/alarm'
@@ -28,6 +28,17 @@ export default function RevealScreen({ answers, onNext }: Props) {
   const cards = useMemo(() => buildCards(answers), [answers])
   const [stage, setStage] = useState<Stage>('alarm')
   const alarming = stage === 'alarm' || stage === 'punch'
+
+  // 아래로 미는 동안 화면 요소가 같이 따라 움직입니다.
+  // 경광봉과 글씨의 이동 속도를 다르게 줘서 깊이감이 생깁니다.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ container: scrollRef })
+  const barY = useTransform(scrollYProgress, [0, 1], [0, -70])
+  const questionY = useTransform(scrollYProgress, [0, 1], [0, -130])
+  const leavingOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0])
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
+  const afterY = useTransform(scrollYProgress, [0, 1], [90, 0])
+  const afterOpacity = useTransform(scrollYProgress, [0.2, 0.8], [0, 1])
 
   const punchLines = cards.length > 0 ? reveal.punch.lines : reveal.punch.zeroLines
 
@@ -123,21 +134,45 @@ export default function RevealScreen({ answers, onNext }: Props) {
       {/* ── 2단계 · 큰 글씨 한 방 ─────────────────────── */}
       <Layer active={stage === 'punch'}>
         <div className={`w-full max-w-[400px] ${stage === 'punch' ? 'qr-jolt' : ''}`}>
-          {punchLines.map((line, i) => (
-            <p
-              key={i}
-              className="text-[40px] leading-[1.14] font-black tracking-tighter text-white"
-            >
-              {fill(line, { count: cards.length })}
-            </p>
-          ))}
-          <p className="mt-7 text-[15px] leading-relaxed text-white/60">
-            {lines(reveal.punch.note).map((line, i) => (
-              <span key={i} className="block">
-                {line}
-              </span>
+          <motion.div
+            initial="hidden"
+            animate={stage === 'punch' ? 'show' : 'hidden'}
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.11 } },
+            }}
+          >
+            {punchLines.map((line, i) => (
+              <motion.p
+                key={i}
+                className="text-[40px] leading-[1.14] font-black tracking-tighter text-white"
+                variants={{
+                  hidden: { opacity: 0, y: 26, skewY: 3 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    skewY: 0,
+                    transition: { duration: 0.38, ease: 'easeOut' },
+                  },
+                }}
+              >
+                {fill(line, { count: cards.length })}
+              </motion.p>
             ))}
-          </p>
+            <motion.p
+              className="mt-7 text-[15px] leading-relaxed text-white/60"
+              variants={{
+                hidden: { opacity: 0, y: 14 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+              }}
+            >
+              {lines(reveal.punch.note).map((line, i) => (
+                <span key={i} className="block">
+                  {line}
+                </span>
+              ))}
+            </motion.p>
+          </motion.div>
         </div>
       </Layer>
 
@@ -158,39 +193,55 @@ export default function RevealScreen({ answers, onNext }: Props) {
         transition={{ duration: 0.35 }}
       >
         {/* 한 화면씩 딱딱 걸리도록 스냅을 겁니다 — 중간에 어정쩡하게 멈추지 않게 */}
-        <div className="h-full snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-contain">
+        <div
+          ref={scrollRef}
+          className="h-full snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-contain"
+        >
           <section className="relative flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
-            <PoliceBar />
-
-            {/* 한 줄씩 밀려 올라오고, 그 뒤로는 경광등 불빛을 받아 밝아졌다 어두워집니다 */}
-            <motion.div
-              className="mt-12 w-full max-w-[400px] px-1 text-center"
-              initial="hidden"
-              animate={stage === 'question' ? 'show' : 'hidden'}
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
-              }}
-            >
-              {reveal.question.lines.map((line, i) => (
-                <motion.p
-                  key={i}
-                  className="qr-lit text-[28px] leading-[1.32] font-black tracking-tight text-white"
-                  variants={{
-                    hidden: { opacity: 0, y: 22 },
-                    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
-                  }}
-                >
-                  {line}
-                </motion.p>
-              ))}
+            {/* 스크롤하면 경광봉과 글씨가 서로 다른 속도로 따라 올라갑니다 */}
+            <motion.div style={{ y: barY, opacity: leavingOpacity }}>
+              <PoliceBar />
             </motion.div>
 
-            <ScrollCue label={reveal.question.scrollCue} />
+            {/* 한 줄씩 밀려 올라오고, 그 뒤로는 경광봉 불빛을 받아 밝아졌다 어두워집니다 */}
+            <motion.div
+              className="mt-12 w-full max-w-[400px] px-1 text-center"
+              style={{ y: questionY, opacity: leavingOpacity }}
+            >
+              <motion.div
+                initial="hidden"
+                animate={stage === 'question' ? 'show' : 'hidden'}
+                variants={{
+                  hidden: {},
+                  show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+                }}
+              >
+                {reveal.question.lines.map((line, i) => (
+                  <motion.p
+                    key={i}
+                    className="qr-lit text-[28px] leading-[1.32] font-black tracking-tight text-white"
+                    variants={{
+                      hidden: { opacity: 0, y: 22 },
+                      show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+                    }}
+                  >
+                    {line}
+                  </motion.p>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            <motion.div style={{ opacity: cueOpacity }}>
+              <ScrollCue label={reveal.question.scrollCue} />
+            </motion.div>
           </section>
 
-          <section className="flex h-full snap-start flex-col justify-center px-5">
-            <div className="w-full max-w-[400px] px-1 text-center">
+          <section className="flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
+            {/* 미는 만큼 아래에서 올라오면서 진해집니다 */}
+            <motion.div
+              className="w-full max-w-[400px] px-1 text-center"
+              style={{ y: afterY, opacity: afterOpacity }}
+            >
               <p className="mb-6 text-[19px] leading-relaxed text-white/70">
                 {reveal.after.lead}
               </p>
@@ -211,7 +262,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
               >
                 {reveal.after.nextButton}
               </button>
-            </div>
+            </motion.div>
           </section>
         </div>
       </motion.div>

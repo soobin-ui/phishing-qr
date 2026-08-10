@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { ui } from '../lib/content'
+
+/** 아래에서 밀려 올라오며 나타나는 공통 등장 동작 */
+const rise: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
 
 interface Props {
   onDone: () => void
@@ -47,18 +55,25 @@ export default function CompleteScreen({ onDone }: Props) {
       </div>
 
       {done ? (
-        <>
-          <p className="mt-6 text-[19px] leading-relaxed font-bold text-gray-900">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
+        >
+          <motion.p
+            variants={rise}
+            className="mt-6 text-[19px] leading-relaxed font-bold text-gray-900"
+          >
             {ui.complete.title}
-          </p>
-          <div className="mt-5 rounded-md bg-gray-50 px-5 py-4">
+          </motion.p>
+          <motion.div variants={rise} className="mt-5 rounded-md bg-gray-50 px-5 py-4">
             {ui.complete.lines.map((line, i) => (
               <p key={i} className="text-[16px] leading-relaxed text-gray-600">
                 {line}
               </p>
             ))}
-          </div>
-        </>
+          </motion.div>
+        </motion.div>
       ) : (
         <p className="mt-6 text-[16px] text-gray-500">{ui.complete.processing}</p>
       )}
