@@ -107,12 +107,19 @@ await shot('alarm-a')
 await wait(700)
 await shot('alarm-b')
 
-// 큰 글씨
+// 큰 글씨 + [다음] 버튼
 await wait(1600)
 await shot('punch')
 
-// 질문 화면 — 경광등이 도는 중이라 프레임을 여러 장
-await wait(1900)
+// [다음] 을 눌러서 넘어가는지 확인 (자동으로도 넘어가지만 버튼이 먼저 동작해야 합니다)
+await page.evaluate(() => {
+  const btn = document.querySelector('[data-role="punch-next"]')
+  if (!btn) throw new Error('큰 글씨 화면에 [다음] 버튼이 없습니다')
+  btn.click()
+})
+
+// 질문 화면 — 경광봉이 치는 중이라 프레임을 여러 장
+await wait(1200)
 await shot('question-a')
 await wait(200)
 await shot('question-b')

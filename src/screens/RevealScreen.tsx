@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { reveal } from '../lib/content'
@@ -47,11 +47,31 @@ export default function RevealScreen({ answers, onNext }: Props) {
 
   const punchLines = cards.length > 0 ? reveal.punch.lines : reveal.punch.zeroLines
 
+  const stopAlarmRef = useRef<() => void>(() => {})
+  const tailTimerRef = useRef<number | undefined>(undefined)
+  const advancedRef = useRef(false)
+
+  /**
+   * 큰 글씨 화면에서 다음으로 넘어갑니다.
+   * [다음] 버튼을 눌러도, 가만히 있어서 시간이 다 돼도 여기로 옵니다.
+   */
+  const goQuestion = useCallback(() => {
+    if (advancedRef.current) return
+    advancedRef.current = true
+    setStage('question')
+    // 경광봉은 계속 번쩍이고, 소리만 잠시 뒤에 끕니다
+    tailTimerRef.current = window.setTimeout(() => {
+      stopAlarmRef.current()
+      buzz(0)
+    }, reveal.timing.sirenTailMs)
+  }, [])
+
   useEffect(() => {
     const timers: number[] = []
     const T = reveal.timing
 
     const stopAlarm = reveal.sound.enabled ? startAlarm(reveal.sound.volume) : () => {}
+    stopAlarmRef.current = stopAlarm
     buzz([120, 90, 120, 90, 120, 90, 600])
 
     let at = cards.length * T.rowStaggerMs + T.alarmHoldMs
@@ -63,23 +83,15 @@ export default function RevealScreen({ answers, onNext }: Props) {
     )
     at += T.punchMs
 
-    timers.push(window.setTimeout(() => setStage('question'), at))
-    at += T.sirenTailMs
-
-    // 화면의 이모지는 계속 반짝이고, 소리만 끕니다
-    timers.push(
-      window.setTimeout(() => {
-        stopAlarm()
-        buzz(0)
-      }, at),
-    )
+    timers.push(window.setTimeout(goQuestion, at))
 
     return () => {
       timers.forEach(clearTimeout)
+      if (tailTimerRef.current) clearTimeout(tailTimerRef.current)
       stopAlarm()
       buzz(0)
     }
-  }, [cards.length])
+  }, [cards.length, goQuestion])
 
   return (
     <div
@@ -177,6 +189,24 @@ export default function RevealScreen({ answers, onNext }: Props) {
                 </span>
               ))}
             </motion.p>
+
+            {/*
+              ★ 이 버튼을 빼지 마세요.
+                이 화면에서 다 끝난 줄 알고 창을 닫아버리는 관람객이 있습니다.
+                흰 버튼이 눈에 띄어야 뒤에 더 있다는 걸 압니다.
+            */}
+            <motion.button
+              onClick={goQuestion}
+              data-role="punch-next"
+              className="mt-9 h-14 w-full rounded-sm bg-white text-[17px] font-bold text-[#a00d14]"
+              whileTap={{ scale: 0.97 }}
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+              }}
+            >
+              {reveal.punch.nextButton}
+            </motion.button>
           </motion.div>
         </div>
       </Layer>
