@@ -61,55 +61,8 @@ button {
 :root {
   --qr-rev: 0.8s;
   --qr-half: 0.4s;
-}
-
-/* ── 회전 경광등 ────────────────────────────────────
-   돔(유리갓) + 림 + 받침대. 돔 안에서 램프가 돌고,
-   돌면서 빨강 ↔ 파랑으로 바뀝니다. */
-
-.qr-beacon-unit {
-  position: relative;
-  width: 172px;
-}
-
-/* 돔 뒤에서 번지는 빛.
-   램프가 이쪽(관람객 쪽)을 향할 때 가장 밝습니다 → 1.1초마다 한 번. */
-.qr-beacon-halo {
-  position: absolute;
-  left: 50%;
-  top: 74px;
-  width: 300px;
-  height: 300px;
-  margin: -150px 0 0 -150px;
-  animation: qr-halo-pulse var(--qr-half) ease-in-out infinite;
-}
-
-.qr-halo-red,
-.qr-halo-blue {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  filter: blur(4px);
-}
-
-.qr-halo-red {
-  background: radial-gradient(closest-side, rgba(255, 45, 60, 0.55), rgba(255, 45, 60, 0) 70%);
-  animation: qr-color-red var(--qr-rev) linear infinite;
-}
-
-.qr-halo-blue {
-  background: radial-gradient(closest-side, rgba(64, 132, 255, 0.55), rgba(64, 132, 255, 0) 70%);
-  animation: qr-color-blue var(--qr-rev) linear infinite;
-}
-
-@keyframes qr-halo-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+  --qr-red: 255, 45, 60;
+  --qr-blue: 64, 132, 255;
 }
 
 /* 빨강 ↔ 파랑 교대. 램프가 반 바퀴 돌 때마다 반대쪽 색이 이쪽을 봅니다. */
@@ -141,15 +94,72 @@ button {
   }
 }
 
-/* 유리갓 — 위는 둥글고 아래로 갈수록 각지게 */
+/* ── 회전 경광등 ────────────────────────────────────
+   유리갓 + 금속 링 + 받침대. 갓은 고정이고 안에서 램프만 돕니다. */
+
+.qr-beacon-unit {
+  position: relative;
+  width: 184px;
+}
+
+/* 갓 뒤로 크게 번지는 빛 — 이게 있어야 어둠 속에서 '켜져 있다'고 읽힙니다 */
+.qr-beacon-halo {
+  position: absolute;
+  left: 50%;
+  top: 62px;
+  width: 460px;
+  height: 460px;
+  margin: -230px 0 0 -230px;
+  animation: qr-halo-pulse var(--qr-half) ease-in-out infinite;
+}
+
+.qr-halo-red,
+.qr-halo-blue {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.qr-halo-red {
+  background: radial-gradient(
+    closest-side,
+    rgba(var(--qr-red), 0.62) 0%,
+    rgba(var(--qr-red), 0.18) 34%,
+    rgba(var(--qr-red), 0) 72%
+  );
+  animation: qr-color-red var(--qr-rev) linear infinite;
+}
+
+.qr-halo-blue {
+  background: radial-gradient(
+    closest-side,
+    rgba(var(--qr-blue), 0.62) 0%,
+    rgba(var(--qr-blue), 0.18) 34%,
+    rgba(var(--qr-blue), 0) 72%
+  );
+  animation: qr-color-blue var(--qr-rev) linear infinite;
+}
+
+@keyframes qr-halo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* 유리갓 — 넓고 낮은 돔 */
 .qr-beacon-dome {
   position: relative;
-  height: 148px;
-  border-radius: 86px 86px 16px 16px / 112px 112px 16px 16px;
+  height: 112px;
+  border-radius: 50% 50% 14px 14px / 62% 62% 14px 14px;
   overflow: hidden;
   box-shadow:
-    inset 0 -14px 26px rgba(0, 0, 0, 0.5),
-    inset 0 6px 14px rgba(255, 255, 255, 0.22);
+    inset 0 -16px 26px rgba(0, 0, 0, 0.42),
+    inset 0 8px 16px rgba(255, 255, 255, 0.3);
 }
 
 .qr-beacon-glass {
@@ -158,64 +168,36 @@ button {
 }
 
 .qr-beacon-glass-red {
-  background: radial-gradient(125% 105% at 50% 82%, #ff6670 0%, #e30f1f 44%, #7d0009 100%);
-  animation: qr-glass-red var(--qr-rev) linear infinite;
+  background: radial-gradient(120% 100% at 50% 88%, #ff7b83 0%, #e8121f 42%, #8b0009 100%);
+  animation: qr-color-red var(--qr-rev) linear infinite;
 }
 
 .qr-beacon-glass-blue {
-  background: radial-gradient(125% 105% at 50% 82%, #7cb2ff 0%, #1657e0 44%, #041d55 100%);
-  animation: qr-glass-blue var(--qr-rev) linear infinite;
-}
-
-@keyframes qr-glass-red {
-  0%,
-  28% {
-    opacity: 1;
-  }
-  50%,
-  78% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes qr-glass-blue {
-  0%,
-  28% {
-    opacity: 0;
-  }
-  50%,
-  78% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  background: radial-gradient(120% 100% at 50% 88%, #8ec0ff 0%, #1a5fe6 42%, #062463 100%);
+  animation: qr-color-blue var(--qr-rev) linear infinite;
 }
 
 /* 갓 안에서 도는 램프 — 앞을 지날 때만 보입니다 */
 .qr-beacon-lamp {
   position: absolute;
-  top: 10%;
-  bottom: 4%;
-  left: 32%;
-  width: 36%;
+  top: 14%;
+  bottom: 6%;
+  left: 30%;
+  width: 40%;
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    rgba(255, 255, 255, 0.98),
-    rgba(255, 255, 255, 0.35) 55%,
-    rgba(255, 255, 255, 0) 78%
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 76%
   );
-  filter: blur(5px);
+  filter: blur(7px);
   animation: qr-lamp var(--qr-rev) linear infinite;
 }
 
 @keyframes qr-lamp {
   0% {
-    transform: translateX(-105%) scaleX(0.4);
+    transform: translateX(-100%) scaleX(0.4);
     opacity: 0.1;
   }
   25% {
@@ -223,30 +205,28 @@ button {
     opacity: 1;
   }
   49% {
-    transform: translateX(105%) scaleX(0.4);
+    transform: translateX(100%) scaleX(0.4);
     opacity: 0.1;
   }
-  50% {
-    opacity: 0;
-  }
+  50%,
   99% {
     opacity: 0;
   }
   100% {
-    transform: translateX(-105%) scaleX(0.4);
+    transform: translateX(-100%) scaleX(0.4);
     opacity: 0.1;
   }
 }
 
-/* 유리 세로 결 */
+/* 유리 세로 결 — 아주 은은하게만 */
 .qr-beacon-ribs {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.14) 0 2px,
-    rgba(0, 0, 0, 0.16) 2px 4px,
-    rgba(255, 255, 255, 0) 4px 13px
+    rgba(255, 255, 255, 0.09) 0 1px,
+    rgba(0, 0, 0, 0.08) 1px 2px,
+    rgba(255, 255, 255, 0) 2px 17px
   );
 }
 
@@ -255,60 +235,95 @@ button {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(44% 30% at 31% 20%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 38%);
+    radial-gradient(26% 17% at 31% 21%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 30%);
 }
 
 /* 갓과 받침 사이 금속 링 */
 .qr-beacon-rim {
   position: relative;
-  height: 13px;
-  margin-top: -2px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #6a6f7a 0%, #33373f 55%, #1b1e24 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  height: 10px;
+  width: 94%;
+  margin: -1px auto 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #9aa0ab 0%, #3e434c 50%, #1c1f26 100%);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.75);
 }
 
 /* 받침대 */
 .qr-beacon-base {
   position: relative;
-  height: 44px;
+  height: 32px;
   margin: 0 auto;
-  width: 92%;
-  border-radius: 6px 6px 12px 12px;
+  width: 82%;
+  border-radius: 3px 3px 9px 9px;
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.07) 0 3px,
-      rgba(0, 0, 0, 0.3) 3px 10px
+      rgba(255, 255, 255, 0.045) 0 1px,
+      rgba(0, 0, 0, 0.16) 1px 9px
     ),
-    linear-gradient(180deg, #3d4149 0%, #16181e 62%, #090a0e 100%);
+    linear-gradient(180deg, #4c515b 0%, #1d2027 56%, #0b0c11 100%);
   box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.65),
-    inset 0 2px 0 rgba(255, 255, 255, 0.16);
+    0 16px 30px rgba(0, 0, 0, 0.72),
+    inset 0 2px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* 받침 아래 바닥에 고이는 빛 — 허공에 떠 있어 보이지 않게 */
+.qr-beacon-floor {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  width: 300px;
+  height: 64px;
+  margin-left: -150px;
+  border-radius: 50%;
+  filter: blur(14px);
+  animation: qr-halo-pulse var(--qr-half) ease-in-out infinite;
+}
+
+.qr-floor-red,
+.qr-floor-blue {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.qr-floor-red {
+  background: radial-gradient(closest-side, rgba(var(--qr-red), 0.4), rgba(var(--qr-red), 0) 74%);
+  animation: qr-color-red var(--qr-rev) linear infinite;
+}
+
+.qr-floor-blue {
+  background: radial-gradient(closest-side, rgba(var(--qr-blue), 0.4), rgba(var(--qr-blue), 0) 74%);
+  animation: qr-color-blue var(--qr-rev) linear infinite;
 }
 
 /* ── 빛줄기 ─────────────────────────────────────────
    ★ 램프는 세로축으로 돕니다. 화면에서 시계 방향으로 도는 게 아니라,
      좌우로 뻗은 빛이 밖으로 뻗었다 들어왔다 하며 훑고 지나갑니다.
      서로 반대쪽을 보는 빛줄기 두 개라 왼쪽이 빨강이면 오른쪽은 파랑이고,
-     반 바퀴(1.1초)마다 색이 서로 바뀝니다.                          */
+     반 바퀴마다 색이 서로 바뀝니다.
+     blur 를 세게 먹여야 판때기가 아니라 '빛'으로 읽힙니다.          */
 
 .qr-beacon-anchor {
   position: absolute;
   left: 50%;
-  top: 74px;
+  top: 56px;
   width: 0;
   height: 0;
   pointer-events: none;
 }
 
+/* 길이를 화면 폭 기준(vw)으로 잡아야, 빛이 화면 가장자리에 닿기 전에
+   자연스럽게 사그라듭니다. 화면 밖에서 잘리면 판때기로 보입니다. */
 .qr-beam {
   position: absolute;
   top: 50%;
-  width: 130vmax;
-  height: 44vmax;
-  margin-top: -22vmax;
+  width: 115vw;
+  height: 145vw;
+  margin-top: -72.5vw;
+  filter: blur(30px);
   animation: qr-beam-sweep var(--qr-half) ease-in-out infinite;
 }
 
@@ -316,14 +331,14 @@ button {
   left: 0;
   --qr-beam-dir: 90deg;
   transform-origin: left center;
-  clip-path: polygon(0 46%, 100% 0, 100% 100%, 0 54%);
+  clip-path: polygon(0 48.6%, 100% 17%, 100% 83%, 0 51.4%);
 }
 
 .qr-beam-left {
   right: 0;
   --qr-beam-dir: 270deg;
   transform-origin: right center;
-  clip-path: polygon(100% 46%, 0 0, 0 100%, 100% 54%);
+  clip-path: polygon(100% 48.6%, 0 17%, 0 83%, 100% 51.4%);
 }
 
 .qr-beam-red,
@@ -335,8 +350,10 @@ button {
 .qr-beam-red {
   background: linear-gradient(
     var(--qr-beam-dir),
-    rgba(255, 45, 60, 0.8),
-    rgba(255, 45, 60, 0) 88%
+    rgba(var(--qr-red), 0.62) 0%,
+    rgba(var(--qr-red), 0.26) 26%,
+    rgba(var(--qr-red), 0.07) 52%,
+    rgba(var(--qr-red), 0) 78%
   );
   animation: qr-color-red var(--qr-rev) linear infinite;
 }
@@ -344,8 +361,10 @@ button {
 .qr-beam-blue {
   background: linear-gradient(
     var(--qr-beam-dir),
-    rgba(64, 132, 255, 0.8),
-    rgba(64, 132, 255, 0) 88%
+    rgba(var(--qr-blue), 0.62) 0%,
+    rgba(var(--qr-blue), 0.26) 26%,
+    rgba(var(--qr-blue), 0.07) 52%,
+    rgba(var(--qr-blue), 0) 78%
   );
   animation: qr-color-blue var(--qr-rev) linear infinite;
 }
@@ -353,20 +372,35 @@ button {
 /* 왼쪽 빛줄기는 오른쪽과 반대 색부터 시작합니다 */
 .qr-beam-left .qr-beam-red,
 .qr-beam-left .qr-beam-blue {
-  animation-delay: -var(--qr-half);
+  animation-delay: calc(var(--qr-half) * -1);
 }
 
 /* 밖으로 뻗었다가(옆을 볼 때) 짧아집니다(이쪽·저쪽을 볼 때) */
 @keyframes qr-beam-sweep {
   0%,
   100% {
-    transform: scaleX(0.18);
-    opacity: 0.08;
+    transform: scaleX(0.16);
+    opacity: 0.06;
   }
   50% {
     transform: scaleX(1);
     opacity: 1;
   }
+}
+
+/* ── 1단계(전송 로그)용 경광등 불빛 ─────────────────── */
+@keyframes qr-beacon {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.qr-beacon {
+  animation: qr-beacon var(--qr-half) ease-in-out infinite;
 }
 
 /* ── 화면 전체가 물드는 섬광 ────────────────────────
@@ -386,12 +420,20 @@ button {
 }
 
 .qr-screenflash-red {
-  background: radial-gradient(120% 80% at 50% 34%, rgba(255, 40, 55, 0.5), rgba(255, 40, 55, 0) 72%);
+  background: radial-gradient(
+    130% 78% at 50% 30%,
+    rgba(var(--qr-red), 0.42),
+    rgba(var(--qr-red), 0) 74%
+  );
   animation: qr-color-red var(--qr-rev) linear infinite;
 }
 
 .qr-screenflash-blue {
-  background: radial-gradient(120% 80% at 50% 34%, rgba(64, 132, 255, 0.5), rgba(64, 132, 255, 0) 72%);
+  background: radial-gradient(
+    130% 78% at 50% 30%,
+    rgba(var(--qr-blue), 0.42),
+    rgba(var(--qr-blue), 0) 74%
+  );
   animation: qr-color-blue var(--qr-rev) linear infinite;
 }
 
@@ -405,6 +447,23 @@ button {
   }
 }
 
+/* ── 아래로 밀라는 신호 ─────────────────────────────── */
+@keyframes qr-cue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(9px);
+    opacity: 1;
+  }
+}
+
+.qr-cue {
+  animation: qr-cue 1.4s ease-in-out infinite;
+}
+
 /* ── 시네마틱 마감 ──────────────────────────────────
    가장자리를 눌러 화면 가운데로 시선을 모으고,
    아주 옅은 필름 그레인으로 CG 티를 뺍니다. 둘 다 움직이지 않습니다. */
@@ -413,10 +472,10 @@ button {
   inset: 0;
   pointer-events: none;
   background: radial-gradient(
-    115% 80% at 50% 42%,
-    rgba(0, 0, 0, 0) 38%,
-    rgba(0, 0, 0, 0.55) 82%,
-    rgba(0, 0, 0, 0.86) 100%
+    120% 86% at 50% 44%,
+    rgba(0, 0, 0, 0) 46%,
+    rgba(0, 0, 0, 0.34) 84%,
+    rgba(0, 0, 0, 0.66) 100%
   );
 }
 
@@ -424,7 +483,7 @@ button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.045;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
   background-size: 140px 140px;
@@ -436,16 +495,16 @@ button {
     transform: translate3d(0, 0, 0);
   }
   12% {
-    transform: translate3d(-5px, 3px, 0);
+    transform: translate3d(-6px, 4px, 0);
   }
   26% {
-    transform: translate3d(4px, -3px, 0);
+    transform: translate3d(5px, -4px, 0);
   }
   40% {
-    transform: translate3d(-3px, -2px, 0);
+    transform: translate3d(-4px, -2px, 0);
   }
   56% {
-    transform: translate3d(2px, 2px, 0);
+    transform: translate3d(3px, 2px, 0);
   }
   72% {
     transform: translate3d(-1px, 0, 0);
@@ -457,31 +516,4 @@ button {
 
 .qr-jolt {
   animation: qr-jolt 0.5s ease-out both;
-}
-
-@keyframes qr-beacon {
-  0%,
-  100% {
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes qr-cue {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(9px);
-  }
-}
-
-.qr-beacon {
-  animation: qr-beacon 1s ease-in-out infinite;
-}
-.qr-cue {
-  animation: qr-cue 1.4s ease-in-out infinite;
 }

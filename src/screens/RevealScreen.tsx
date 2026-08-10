@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { reveal } from '../lib/content'
 import { buildCards, buzz } from '../lib/reveal'
 import { startAlarm } from '../lib/alarm'
-import { fill } from '../lib/format'
+import { fill, lines } from '../lib/format'
 import type { Answers } from '../types'
 
 interface Props {
@@ -131,7 +131,13 @@ export default function RevealScreen({ answers, onNext }: Props) {
               {fill(line, { count: cards.length })}
             </p>
           ))}
-          <p className="mt-6 text-[15px] leading-relaxed text-white/65">{reveal.punch.note}</p>
+          <p className="mt-7 text-[15px] leading-relaxed text-white/60">
+            {lines(reveal.punch.note).map((line, i) => (
+              <span key={i} className="block">
+                {line}
+              </span>
+            ))}
+          </p>
         </div>
       </Layer>
 
@@ -156,11 +162,12 @@ export default function RevealScreen({ answers, onNext }: Props) {
           <section className="relative flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
             <PoliceBeacon />
 
-            <div className="mt-11 w-full max-w-[400px] px-1">
+            <div className="mt-12 w-full max-w-[400px] px-1 text-center">
               {reveal.question.lines.map((line, i) => (
                 <p
                   key={i}
-                  className="text-[28px] leading-[1.3] font-black tracking-tight text-white"
+                  className="text-[28px] leading-[1.32] font-black tracking-tight text-white"
+                  style={{ textShadow: '0 2px 18px rgba(0,0,0,0.7)' }}
                 >
                   {line}
                 </p>
@@ -171,19 +178,19 @@ export default function RevealScreen({ answers, onNext }: Props) {
           </section>
 
           <section className="flex h-full snap-start flex-col justify-center px-5">
-            <div className="w-full max-w-[400px] px-1">
-              <p className="mb-5 text-[20px] leading-relaxed text-white/75">
+            <div className="w-full max-w-[400px] px-1 text-center">
+              <p className="mb-6 text-[19px] leading-relaxed text-white/70">
                 {reveal.after.lead}
               </p>
               {reveal.after.lines.map((line, i) => (
                 <p
                   key={i}
-                  className="text-[26px] leading-[1.32] font-black tracking-tight text-white"
+                  className="text-[27px] leading-[1.32] font-black tracking-tight text-white"
                 >
                   {line}
                 </p>
               ))}
-              <p className="mt-5 text-[13px] leading-relaxed text-white/45">
+              <p className="mt-6 text-[13px] leading-relaxed text-white/40">
                 {reveal.after.source}
               </p>
               <button
@@ -261,6 +268,12 @@ function PoliceBeacon() {
 
       <div className="qr-beacon-rim" />
       <div className="qr-beacon-base" />
+
+      {/* 바닥에 고이는 빛 — 허공에 떠 있어 보이지 않게 */}
+      <div className="qr-beacon-floor">
+        <div className="qr-floor-red" />
+        <div className="qr-floor-blue" />
+      </div>
     </div>
   )
 }

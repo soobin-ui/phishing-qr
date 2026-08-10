@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { form, fields, ui } from '../lib/content'
+import Mascot from '../components/Mascot'
 import { unlockAudio } from '../lib/alarm'
 import { digitsOnly, formatPhone, lines } from '../lib/format'
 import type { Answers, FieldDef } from '../types'
@@ -53,17 +54,24 @@ export default function FormScreen({ onSubmit }: Props) {
     <div className="min-h-dvh bg-[#f4f5f7]">
       <div className="mx-auto w-full max-w-[430px] bg-white min-h-dvh">
         <header className="border-b border-gray-200 px-5 pt-7 pb-5">
-          <p className="text-[15px] text-gray-500">{form.header.eventName}</p>
-          <h1 className="mt-1 text-[22px] leading-snug font-bold text-gray-900">
-            {form.header.title}
-          </h1>
-          <p className="mt-3 text-[16px] leading-relaxed text-gray-600">
-            {lines(form.header.description).map((line, i) => (
-              <span key={i} className="block">
-                {line}
-              </span>
-            ))}
-          </p>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] text-gray-500">{form.header.eventName}</p>
+              <h1 className="mt-1 text-[22px] leading-snug font-bold text-gray-900">
+                {form.header.title}
+              </h1>
+              <p className="mt-3 text-[16px] leading-relaxed text-gray-600">
+                {lines(form.header.description).map((line, i) => (
+                  <span key={i} className="block">
+                    {line}
+                  </span>
+                ))}
+              </p>
+            </div>
+            <div className="mt-1 shrink-0">
+              <Mascot size={78} />
+            </div>
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} noValidate autoComplete="off" className="px-5 py-6">
