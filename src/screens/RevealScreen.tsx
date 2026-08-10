@@ -162,17 +162,29 @@ export default function RevealScreen({ answers, onNext }: Props) {
           <section className="relative flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
             <PoliceBeacon />
 
-            <div className="mt-12 w-full max-w-[400px] px-1 text-center">
+            {/* 한 줄씩 밀려 올라오고, 그 뒤로는 경광등 불빛을 받아 밝아졌다 어두워집니다 */}
+            <motion.div
+              className="mt-12 w-full max-w-[400px] px-1 text-center"
+              initial="hidden"
+              animate={stage === 'question' ? 'show' : 'hidden'}
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+              }}
+            >
               {reveal.question.lines.map((line, i) => (
-                <p
+                <motion.p
                   key={i}
-                  className="text-[28px] leading-[1.32] font-black tracking-tight text-white"
-                  style={{ textShadow: '0 2px 18px rgba(0,0,0,0.7)' }}
+                  className="qr-lit text-[28px] leading-[1.32] font-black tracking-tight text-white"
+                  variants={{
+                    hidden: { opacity: 0, y: 22 },
+                    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+                  }}
                 >
                   {line}
-                </p>
+                </motion.p>
               ))}
-            </div>
+            </motion.div>
 
             <ScrollCue label={reveal.question.scrollCue} />
           </section>
