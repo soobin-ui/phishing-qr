@@ -1,4 +1,5 @@
 import { ui } from '../lib/content'
+import { lines } from '../lib/format'
 import Mascot from '../components/Mascot'
 
 /**
@@ -19,18 +20,22 @@ export default function BoothScreen() {
         <Mascot size={106} outline={false} />
 
         <div className="mt-7 w-full max-w-[400px] text-center">
-          <p className="text-[18px] text-white/55">{booth.lead}</p>
+          {booth.lines.map((line, i) => (
+            <p
+              key={i}
+              className="text-[28px] leading-[1.3] font-black tracking-tight text-white"
+            >
+              {line}
+            </p>
+          ))}
 
-          <div className="mt-2">
-            {booth.lines.map((line, i) => (
-              <p
-                key={i}
-                className="text-[31px] leading-[1.26] font-black tracking-tight text-white"
-              >
+          <p className="mt-5 text-[17px] leading-relaxed text-white/70">
+            {lines(booth.sub).map((line, i) => (
+              <span key={i} className="block">
                 {line}
-              </p>
+              </span>
             ))}
-          </div>
+          </p>
 
           <div className="mt-8 flex items-center justify-center gap-2.5 border border-white/25 px-4 py-4">
             <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" className="shrink-0">

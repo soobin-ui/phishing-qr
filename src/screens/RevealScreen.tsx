@@ -184,20 +184,6 @@ export default function RevealScreen({ answers, onNext }: Props) {
                   {line}
                 </motion.p>
               ))}
-
-              <motion.p
-                className="mt-6 text-[17px] leading-relaxed text-white/70"
-                variants={{
-                  hidden: { opacity: 0, y: 16 },
-                  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-                }}
-              >
-                {lines(reveal.question.sub).map((line, i) => (
-                  <span key={i} className="block">
-                    {line}
-                  </span>
-                ))}
-              </motion.p>
             </motion.div>
 
             <ScrollCue label={reveal.question.scrollCue} />
