@@ -48,9 +48,9 @@ button {
 /* ── 빨간 화면 애니메이션 ─────────────────────────────
    계속 도는 것들은 CSS로 돌립니다. 저사양 휴대폰에서 JS로 돌리면 끊깁니다.
 
-   ★ 경광등 속도는 아래 두 값만 바꾸면 전부 따라옵니다.
-       --qr-rev  : 램프 한 바퀴
-       --qr-half : 반 바퀴 = 번쩍이는 주기
+   ★ 속도는 아래 두 값만 바꾸면 전부 따라옵니다.
+       --qr-rev  : 빨강 → 파랑 → 빨강 한 바퀴
+       --qr-half : 반 바퀴 = 한쪽이 번쩍이는 주기
 
    ⚠️ --qr-half 를 0.34초보다 짧게 두지 마세요.
       화면 대부분을 덮는 적·청색 점멸이 초당 3회를 넘으면
@@ -65,7 +65,7 @@ button {
   --qr-blue: 64, 132, 255;
 }
 
-/* 빨강 ↔ 파랑 교대. 램프가 반 바퀴 돌 때마다 반대쪽 색이 이쪽을 봅니다. */
+/* 왼쪽(빨강)과 오른쪽(파랑)이 번갈아 켜집니다. 실제 경광봉이 이렇게 칩니다. */
 @keyframes qr-color-red {
   0%,
   38% {
@@ -94,23 +94,188 @@ button {
   }
 }
 
-/* ── 회전 경광등 ────────────────────────────────────
-   유리갓 + 금속 링 + 받침대. 갓은 고정이고 안에서 램프만 돕니다. */
+/* ── 경광봉(라이트바) ────────────────────────────────
+   각진 하우징 안에 렌즈 모듈이 줄지어 박혀 있고,
+   왼쪽 빨강 / 오른쪽 파랑이 번갈아 칩니다. */
 
-.qr-beacon-unit {
+.qr-bar-unit {
   position: relative;
-  width: 156px;
+  width: 268px;
 }
 
-/* 갓 뒤로 크게 번지는 빛 — 이게 있어야 어둠 속에서 '켜져 있다'고 읽힙니다 */
-.qr-beacon-halo {
+.qr-bar {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  height: 72px;
+  padding: 7px;
+  background: linear-gradient(180deg, #6b7280 0%, #2a2e36 38%, #0f1116 100%);
+  /* 양 끝을 살짝 깎아 각진 하우징처럼 */
+  clip-path: polygon(0 0, 100% 0, 96.5% 100%, 3.5% 100%);
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.qr-seg {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: #0b0d12;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+/* 렌즈 결 — 각진 느낌을 살리는 대각선 컷 */
+.qr-seg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.2) 0 1px,
+    rgba(0, 0, 0, 0.34) 1px 3px,
+    rgba(255, 255, 255, 0) 3px 9px
+  );
+}
+
+.qr-seg-lens {
+  position: absolute;
+  inset: 0;
+}
+
+.qr-seg-red .qr-seg-lens {
+  background: linear-gradient(180deg, #ff7078 0%, #f01223 46%, #8e0009 100%);
+  box-shadow: 0 0 22px 5px rgba(var(--qr-red), 0.85);
+  animation: qr-lens-red var(--qr-rev) ease-in-out infinite;
+}
+
+.qr-seg-blue .qr-seg-lens {
+  background: linear-gradient(180deg, #85b9ff 0%, #1258e8 46%, #062059 100%);
+  box-shadow: 0 0 22px 5px rgba(var(--qr-blue), 0.85);
+  animation: qr-lens-blue var(--qr-rev) ease-in-out infinite;
+}
+
+/* 꺼져도 렌즈는 어렴풋이 보입니다(완전히 사라지면 구멍처럼 보임) */
+@keyframes qr-lens-red {
+  0%,
+  38% {
+    opacity: 1;
+  }
+  50%,
+  88% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes qr-lens-blue {
+  0%,
+  38% {
+    opacity: 0.14;
+  }
+  50%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.14;
+  }
+}
+
+/* 하우징 위 크롬 라인 */
+.qr-bar-lip {
+  position: relative;
+  height: 5px;
+  margin: -1px auto 0;
+  width: 94%;
+  background: linear-gradient(180deg, #8e949f 0%, #34383f 60%, #14161b 100%);
+}
+
+/* 받침 다리 */
+.qr-bar-feet {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 26px;
+}
+
+.qr-bar-feet span {
+  display: block;
+  width: 40px;
+  height: 15px;
+  background: linear-gradient(180deg, #3a3e46 0%, #14161b 70%, #08090d 100%);
+  clip-path: polygon(0 0, 100% 0, 84% 100%, 16% 100%);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* 바닥에 고이는 빛 — 허공에 떠 있어 보이지 않게 */
+.qr-bar-floor {
   position: absolute;
   left: 50%;
-  top: 96px;
-  width: 460px;
-  height: 460px;
-  margin: -230px 0 0 -230px;
-  animation: qr-halo-pulse var(--qr-half) ease-in-out infinite;
+  bottom: -30px;
+  width: 340px;
+  height: 62px;
+  margin-left: -170px;
+  filter: blur(16px);
+}
+
+.qr-floor-red,
+.qr-floor-blue {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.qr-floor-red {
+  background: radial-gradient(
+    closest-side,
+    rgba(var(--qr-red), 0.45),
+    rgba(var(--qr-red), 0) 74%
+  );
+  animation: qr-color-red var(--qr-rev) ease-in-out infinite;
+}
+
+.qr-floor-blue {
+  background: radial-gradient(
+    closest-side,
+    rgba(var(--qr-blue), 0.45),
+    rgba(var(--qr-blue), 0) 74%
+  );
+  animation: qr-color-blue var(--qr-rev) ease-in-out infinite;
+}
+
+/* ── 빛 ─────────────────────────────────────────────
+   경광봉은 세로축으로 도는 회전등이 아니라, 좌우 렌즈가 번갈아 치는 것입니다.
+   왼쪽은 늘 빨강, 오른쪽은 늘 파랑. 서로 번갈아 켜집니다.
+   길이는 화면 폭 기준(vw)이라 가장자리에 닿기 전에 사그라듭니다. */
+
+.qr-bar-anchor {
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* 하우징 좌·우 렌즈 무리에서 번지는 빛 */
+.qr-halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 340px;
+  margin: -170px 0 0 -170px;
+}
+
+.qr-halo-l {
+  transform: translateX(-66px);
+}
+
+.qr-halo-r {
+  transform: translateX(66px);
 }
 
 .qr-halo-red,
@@ -124,223 +289,42 @@ button {
 .qr-halo-red {
   background: radial-gradient(
     closest-side,
-    rgba(var(--qr-red), 0.62) 0%,
-    rgba(var(--qr-red), 0.18) 34%,
+    rgba(var(--qr-red), 0.55) 0%,
+    rgba(var(--qr-red), 0.14) 36%,
     rgba(var(--qr-red), 0) 72%
   );
-  animation: qr-color-red var(--qr-rev) linear infinite;
+  animation: qr-color-red var(--qr-rev) ease-in-out infinite;
 }
 
 .qr-halo-blue {
   background: radial-gradient(
     closest-side,
-    rgba(var(--qr-blue), 0.62) 0%,
-    rgba(var(--qr-blue), 0.18) 34%,
+    rgba(var(--qr-blue), 0.55) 0%,
+    rgba(var(--qr-blue), 0.14) 36%,
     rgba(var(--qr-blue), 0) 72%
   );
-  animation: qr-color-blue var(--qr-rev) linear infinite;
+  animation: qr-color-blue var(--qr-rev) ease-in-out infinite;
 }
 
-@keyframes qr-halo-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
-/* 유리갓 — 아래는 거의 수직이고 위로 갈수록 둥글어지는 총알 모양.
-   가로로 납작한 반원이 되면 경광등으로 안 보입니다. 세로가 가로보다 길어야 합니다. */
-.qr-beacon-dome {
-  position: relative;
-  height: 158px;
-  border-radius: 78px 78px 12px 12px / 112px 112px 9px 9px;
-  overflow: hidden;
-  box-shadow:
-    inset 0 -20px 30px rgba(0, 0, 0, 0.5),
-    inset 0 10px 18px rgba(255, 255, 255, 0.28),
-    inset 14px 0 26px rgba(0, 0, 0, 0.3),
-    inset -14px 0 26px rgba(0, 0, 0, 0.3);
-}
-
-.qr-beacon-glass {
-  position: absolute;
-  inset: 0;
-}
-
-.qr-beacon-glass-red {
-  background: radial-gradient(78% 58% at 50% 74%, #ff8a91 0%, #ea1421 46%, #7d0008 100%);
-  animation: qr-color-red var(--qr-rev) linear infinite;
-}
-
-.qr-beacon-glass-blue {
-  background: radial-gradient(78% 58% at 50% 74%, #9ac9ff 0%, #1b60e8 46%, #05205c 100%);
-  animation: qr-color-blue var(--qr-rev) linear infinite;
-}
-
-/* 갓 안에서 도는 램프 — 앞을 지날 때만 보입니다 */
-.qr-beacon-lamp {
-  position: absolute;
-  top: 26%;
-  bottom: 5%;
-  left: 28%;
-  width: 44%;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    rgba(255, 255, 255, 1),
-    rgba(255, 255, 255, 0.45) 50%,
-    rgba(255, 255, 255, 0) 76%
-  );
-  filter: blur(7px);
-  animation: qr-lamp var(--qr-rev) linear infinite;
-}
-
-@keyframes qr-lamp {
-  0% {
-    transform: translateX(-100%) scaleX(0.4);
-    opacity: 0.1;
-  }
-  25% {
-    transform: translateX(0) scaleX(1);
-    opacity: 1;
-  }
-  49% {
-    transform: translateX(100%) scaleX(0.4);
-    opacity: 0.1;
-  }
-  50%,
-  99% {
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(-100%) scaleX(0.4);
-    opacity: 0.1;
-  }
-}
-
-/* 유리 세로 결 — 아주 은은하게만 */
-.qr-beacon-ribs {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.09) 0 1px,
-    rgba(0, 0, 0, 0.08) 1px 2px,
-    rgba(255, 255, 255, 0) 2px 17px
-  );
-}
-
-/* 고정된 유리 반사 — 갓은 안 돌고 안쪽 램프만 돕니다 */
-.qr-beacon-gloss {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(15% 22% at 30% 24%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 26%);
-}
-
-/* 갓과 받침 사이 금속 링 */
-.qr-beacon-rim {
-  position: relative;
-  height: 12px;
-  width: 100%;
-  margin: -2px auto 0;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #a2a8b3 0%, #444951 48%, #1d2027 100%);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.8);
-}
-
-/* 받침대 */
-.qr-beacon-base {
-  position: relative;
-  height: 46px;
-  margin: 0 auto;
-  width: 97%;
-  border-radius: 3px 3px 10px 10px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0 1px,
-      rgba(0, 0, 0, 0.2) 1px 8px
-    ),
-    linear-gradient(180deg, #50555f 0%, #1f2229 52%, #0a0b10 100%);
-  box-shadow:
-    0 18px 32px rgba(0, 0, 0, 0.75),
-    inset 0 2px 0 rgba(255, 255, 255, 0.14);
-}
-
-/* 받침 아래 바닥에 고이는 빛 — 허공에 떠 있어 보이지 않게 */
-.qr-beacon-floor {
-  position: absolute;
-  left: 50%;
-  bottom: -26px;
-  width: 300px;
-  height: 64px;
-  margin-left: -150px;
-  border-radius: 50%;
-  filter: blur(14px);
-  animation: qr-halo-pulse var(--qr-half) ease-in-out infinite;
-}
-
-.qr-floor-red,
-.qr-floor-blue {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-}
-
-.qr-floor-red {
-  background: radial-gradient(closest-side, rgba(var(--qr-red), 0.4), rgba(var(--qr-red), 0) 74%);
-  animation: qr-color-red var(--qr-rev) linear infinite;
-}
-
-.qr-floor-blue {
-  background: radial-gradient(closest-side, rgba(var(--qr-blue), 0.4), rgba(var(--qr-blue), 0) 74%);
-  animation: qr-color-blue var(--qr-rev) linear infinite;
-}
-
-/* ── 빛줄기 ─────────────────────────────────────────
-   ★ 램프는 세로축으로 돕니다. 화면에서 시계 방향으로 도는 게 아니라,
-     좌우로 뻗은 빛이 밖으로 뻗었다 들어왔다 하며 훑고 지나갑니다.
-     서로 반대쪽을 보는 빛줄기 두 개라 왼쪽이 빨강이면 오른쪽은 파랑이고,
-     반 바퀴마다 색이 서로 바뀝니다.
-     blur 를 세게 먹여야 판때기가 아니라 '빛'으로 읽힙니다.          */
-
-.qr-beacon-anchor {
-  position: absolute;
-  left: 50%;
-  top: 96px;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-/* 길이를 화면 폭 기준(vw)으로 잡아야, 빛이 화면 가장자리에 닿기 전에
-   자연스럽게 사그라듭니다. 화면 밖에서 잘리면 판때기로 보입니다. */
 .qr-beam {
   position: absolute;
-  top: 50%;
+  top: 0;
   width: 115vw;
   height: 145vw;
   margin-top: -72.5vw;
   filter: blur(30px);
-  animation: qr-beam-sweep var(--qr-half) ease-in-out infinite;
 }
 
+/* 빛이 나오는 지점을 각 렌즈 무리 한가운데로 옮깁니다 */
 .qr-beam-right {
-  left: 0;
+  left: 66px;
   --qr-beam-dir: 90deg;
-  transform-origin: left center;
   clip-path: polygon(0 48.6%, 100% 17%, 100% 83%, 0 51.4%);
 }
 
 .qr-beam-left {
-  right: 0;
+  right: 66px;
   --qr-beam-dir: 270deg;
-  transform-origin: right center;
   clip-path: polygon(100% 48.6%, 0 17%, 0 83%, 100% 51.4%);
 }
 
@@ -350,45 +334,27 @@ button {
   inset: 0;
 }
 
+/* 화면 가장자리에 닿기 전에 완전히 사그라들어야 잘린 티가 안 납니다 */
 .qr-beam-red {
   background: linear-gradient(
     var(--qr-beam-dir),
-    rgba(var(--qr-red), 0.62) 0%,
-    rgba(var(--qr-red), 0.26) 26%,
-    rgba(var(--qr-red), 0.07) 52%,
-    rgba(var(--qr-red), 0) 78%
+    rgba(var(--qr-red), 0.68) 0%,
+    rgba(var(--qr-red), 0.3) 14%,
+    rgba(var(--qr-red), 0.08) 28%,
+    rgba(var(--qr-red), 0) 42%
   );
-  animation: qr-color-red var(--qr-rev) linear infinite;
+  animation: qr-color-red var(--qr-rev) ease-in-out infinite;
 }
 
 .qr-beam-blue {
   background: linear-gradient(
     var(--qr-beam-dir),
-    rgba(var(--qr-blue), 0.62) 0%,
-    rgba(var(--qr-blue), 0.26) 26%,
-    rgba(var(--qr-blue), 0.07) 52%,
-    rgba(var(--qr-blue), 0) 78%
+    rgba(var(--qr-blue), 0.68) 0%,
+    rgba(var(--qr-blue), 0.3) 14%,
+    rgba(var(--qr-blue), 0.08) 28%,
+    rgba(var(--qr-blue), 0) 42%
   );
-  animation: qr-color-blue var(--qr-rev) linear infinite;
-}
-
-/* 왼쪽 빛줄기는 오른쪽과 반대 색부터 시작합니다 */
-.qr-beam-left .qr-beam-red,
-.qr-beam-left .qr-beam-blue {
-  animation-delay: calc(var(--qr-half) * -1);
-}
-
-/* 밖으로 뻗었다가(옆을 볼 때) 짧아집니다(이쪽·저쪽을 볼 때) */
-@keyframes qr-beam-sweep {
-  0%,
-  100% {
-    transform: scaleX(0.16);
-    opacity: 0.06;
-  }
-  50% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
+  animation: qr-color-blue var(--qr-rev) ease-in-out infinite;
 }
 
 /* ── 1단계(전송 로그)용 경광등 불빛 ─────────────────── */
@@ -407,13 +373,11 @@ button {
 }
 
 /* ── 화면 전체가 물드는 섬광 ────────────────────────
-   램프가 이쪽을 정면으로 볼 때 화면이 확 물듭니다.
    흰색 스트로브가 아니라 색으로만 물들여서 눈에 덜 때립니다. */
 .qr-screenflash {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  animation: qr-screenflash var(--qr-half) ease-in-out infinite;
 }
 
 .qr-screenflash-red,
@@ -424,34 +388,23 @@ button {
 
 .qr-screenflash-red {
   background: radial-gradient(
-    130% 78% at 50% 30%,
-    rgba(var(--qr-red), 0.42),
+    130% 78% at 34% 30%,
+    rgba(var(--qr-red), 0.4),
     rgba(var(--qr-red), 0) 74%
   );
-  animation: qr-color-red var(--qr-rev) linear infinite;
+  animation: qr-color-red var(--qr-rev) ease-in-out infinite;
 }
 
 .qr-screenflash-blue {
   background: radial-gradient(
-    130% 78% at 50% 30%,
-    rgba(var(--qr-blue), 0.42),
+    130% 78% at 66% 30%,
+    rgba(var(--qr-blue), 0.4),
     rgba(var(--qr-blue), 0) 74%
   );
-  animation: qr-color-blue var(--qr-rev) linear infinite;
+  animation: qr-color-blue var(--qr-rev) ease-in-out infinite;
 }
 
-@keyframes qr-screenflash {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  55% {
-    opacity: 0;
-  }
-}
-
-/* ── 경광등 불빛을 받는 글씨 ─────────────────────────
-   램프가 이쪽을 볼 때 밝아졌다가, 돌아서면 어두워집니다.
+/* ── 경광봉 불빛을 받는 글씨 ─────────────────────────
    opacity 가 아니라 filter 로 처리해야 등장 애니메이션과 부딪히지 않습니다. */
 @keyframes qr-lit {
   0%,
@@ -460,7 +413,7 @@ button {
       drop-shadow(0 3px 16px rgba(0, 0, 0, 0.85));
   }
   50% {
-    filter: brightness(0.78) drop-shadow(0 0 4px rgba(255, 255, 255, 0.08))
+    filter: brightness(0.8) drop-shadow(0 0 4px rgba(255, 255, 255, 0.08))
       drop-shadow(0 3px 16px rgba(0, 0, 0, 0.85));
   }
 }

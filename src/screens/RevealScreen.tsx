@@ -160,7 +160,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
         {/* 한 화면씩 딱딱 걸리도록 스냅을 겁니다 — 중간에 어정쩡하게 멈추지 않게 */}
         <div className="h-full snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-contain">
           <section className="relative flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
-            <PoliceBeacon />
+            <PoliceBar />
 
             {/* 한 줄씩 밀려 올라오고, 그 뒤로는 경광등 불빛을 받아 밝아졌다 어두워집니다 */}
             <motion.div
@@ -184,6 +184,20 @@ export default function RevealScreen({ answers, onNext }: Props) {
                   {line}
                 </motion.p>
               ))}
+
+              <motion.p
+                className="mt-6 text-[17px] leading-relaxed text-white/70"
+                variants={{
+                  hidden: { opacity: 0, y: 16 },
+                  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+                }}
+              >
+                {lines(reveal.question.sub).map((line, i) => (
+                  <span key={i} className="block">
+                    {line}
+                  </span>
+                ))}
+              </motion.p>
             </motion.div>
 
             <ScrollCue label={reveal.question.scrollCue} />
@@ -243,46 +257,44 @@ function ScrollCue({ label }: { label: string }) {
 }
 
 /**
- * 회전 경광등. 유리갓 + 금속 링 + 받침대.
- *
- * ★ 램프는 세로축으로 돕니다.
- *   빛이 화면에서 시계 방향으로 도는 게 아니라, 좌우로 뻗은 빛줄기가
- *   밖으로 뻗었다 들어왔다 하며 훑고 지나갑니다.
- *   생김새와 속도는 index.css 의 .qr-beacon-* / .qr-beam-* 에 있습니다.
+ * 경광봉(라이트바). 각진 하우징에 렌즈 모듈이 줄지어 박혀 있고,
+ * 왼쪽 빨강 / 오른쪽 파랑이 번갈아 칩니다.
+ * 생김새와 속도는 index.css 의 .qr-bar-* / .qr-beam-* 에 있습니다.
  */
-function PoliceBeacon() {
+function PoliceBar() {
   return (
-    <div className="qr-beacon-unit">
-      {/* 빛은 갓 한가운데에서 좌우로 뻗어나갑니다 */}
-      <div className="qr-beacon-anchor">
+    <div className="qr-bar-unit">
+      {/* 빛은 하우징 좌·우로 뻗어나갑니다 */}
+      <div className="qr-bar-anchor">
         <div className="qr-beam qr-beam-left">
           <div className="qr-beam-red" />
-          <div className="qr-beam-blue" />
         </div>
         <div className="qr-beam qr-beam-right">
-          <div className="qr-beam-red" />
           <div className="qr-beam-blue" />
+        </div>
+        <div className="qr-halo qr-halo-l">
+          <div className="qr-halo-red" />
+        </div>
+        <div className="qr-halo qr-halo-r">
+          <div className="qr-halo-blue" />
         </div>
       </div>
 
-      <div className="qr-beacon-halo">
-        <div className="qr-halo-red" />
-        <div className="qr-halo-blue" />
+      <div className="qr-bar">
+        {['red', 'red', 'red', 'blue', 'blue', 'blue'].map((side, i) => (
+          <div key={i} className={`qr-seg qr-seg-${side}`}>
+            <div className="qr-seg-lens" />
+          </div>
+        ))}
       </div>
 
-      <div className="qr-beacon-dome">
-        <div className="qr-beacon-glass qr-beacon-glass-red" />
-        <div className="qr-beacon-glass qr-beacon-glass-blue" />
-        <div className="qr-beacon-lamp" />
-        <div className="qr-beacon-ribs" />
-        <div className="qr-beacon-gloss" />
+      <div className="qr-bar-lip" />
+      <div className="qr-bar-feet">
+        <span />
+        <span />
       </div>
 
-      <div className="qr-beacon-rim" />
-      <div className="qr-beacon-base" />
-
-      {/* 바닥에 고이는 빛 — 허공에 떠 있어 보이지 않게 */}
-      <div className="qr-beacon-floor">
+      <div className="qr-bar-floor">
         <div className="qr-floor-red" />
         <div className="qr-floor-blue" />
       </div>
