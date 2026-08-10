@@ -43,6 +43,17 @@ await page.goto(URL + (URL.includes('?') ? '&' : '?') + 'shot=' + Date.now(), {
   waitUntil: 'networkidle0',
 })
 
+// [0] 시작 화면 — 마스코트가 튀어나오는 중 / 다 나온 뒤
+await wait(500)
+await shot('intro-pop')
+await wait(1200)
+await shot('intro')
+
+await page.evaluate(() => {
+  ;[...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '응모하기').click()
+})
+await wait(700)
+
 // [1] 응모 폼
 await shot('form-top')
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))

@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { form, fields, ui } from '../lib/content'
 import Mascot from '../components/Mascot'
 import { unlockAudio } from '../lib/alarm'
@@ -8,6 +10,12 @@ import type { Answers, FieldDef } from '../types'
 
 interface Props {
   onSubmit: (answers: Answers) => void
+}
+
+/** 입력 항목이 위에서 차례로 내려오는 동작 */
+const fieldRise: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: 'easeOut' } },
 }
 
 /**
@@ -75,16 +83,24 @@ export default function FormScreen({ onSubmit }: Props) {
         </header>
 
         <form onSubmit={handleSubmit} noValidate autoComplete="off" className="px-5 py-6">
-          <div className="space-y-5">
+          {/* 항목이 위에서부터 차례로 내려옵니다. 흔한 응모 폼이 이 정도는 합니다 —
+              여기서 더 화려하게 만들면 관람객이 경계합니다. */}
+          <motion.div
+            className="space-y-5"
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+          >
             {fields.map((def) => (
-              <Field
-                key={def.id}
-                def={def}
-                value={answers[def.id] ?? ''}
-                onChange={(v) => setValue(def.id, v)}
-              />
+              <motion.div key={def.id} variants={fieldRise}>
+                <Field
+                  def={def}
+                  value={answers[def.id] ?? ''}
+                  onChange={(v) => setValue(def.id, v)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* ── 동의 영역 ─────────────────────────────── */}
           <div ref={consentRef} className="mt-8 border-t border-gray-200 pt-5">
@@ -114,17 +130,31 @@ export default function FormScreen({ onSubmit }: Props) {
             </div>
 
             {noticeOpen && (
-              <div className="mt-3 rounded-md bg-gray-50 p-4 text-[15px] leading-relaxed text-gray-600">
-                {lines(form.consent.notice).map((line, i) => (
-                  <span key={i} className="block">
-                    {line}
-                  </span>
-                ))}
-              </div>
+              <motion.div
+                className="overflow-hidden"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                transition={{ duration: 0.28, ease: 'easeOut' }}
+              >
+                <div className="mt-3 rounded-md bg-gray-50 p-4 text-[15px] leading-relaxed text-gray-600">
+                  {lines(form.consent.notice).map((line, i) => (
+                    <span key={i} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
             )}
 
             {consentError && (
-              <p className="mt-2 pl-7 text-[15px] text-red-600">{form.consent.requiredError}</p>
+              <motion.p
+                className="mt-2 pl-7 text-[15px] text-red-600"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.22 }}
+              >
+                {form.consent.requiredError}
+              </motion.p>
             )}
 
             <label className="mt-4 flex items-start gap-2.5">
@@ -140,12 +170,14 @@ export default function FormScreen({ onSubmit }: Props) {
             </label>
           </div>
 
-          <button
+          <motion.button
             type="submit"
             className="mt-7 h-14 w-full rounded-md bg-[#1b64da] text-[17px] font-bold text-white active:bg-[#164fb0]"
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
           >
             {form.submitButton}
-          </button>
+          </motion.button>
 
           {/* 키보드가 올라온 상태에서도 제출 버튼까지 스크롤이 닿도록 여백을 둡니다 */}
           <div className="h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
@@ -155,8 +187,11 @@ export default function FormScreen({ onSubmit }: Props) {
   )
 }
 
+// 탭하면 테두리가 파랗게 차오르고 살짝 떠오릅니다(입력 중인 칸이 어디인지 바로 보이게)
 const inputClass =
-  'w-full h-12 rounded-md border border-gray-300 bg-white px-3 text-gray-900 placeholder:text-gray-400 focus:border-[#1b64da] focus:ring-1 focus:ring-[#1b64da] focus:outline-none'
+  'w-full h-12 rounded-md border border-gray-300 bg-white px-3 text-gray-900 placeholder:text-gray-400 ' +
+  'transition-[border-color,box-shadow,background-color] duration-200 ' +
+  'focus:border-[#1b64da] focus:bg-[#f7faff] focus:shadow-[0_2px_10px_rgba(27,100,218,0.18)] focus:outline-none'
 
 // 드롭다운 오른쪽 화살표 (외부 이미지 요청이 생기지 않도록 인라인 SVG로 그립니다)
 const caret =

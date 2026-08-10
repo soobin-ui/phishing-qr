@@ -25,7 +25,7 @@ export default function BoothScreen() {
       <div className="qr-grain" />
 
       <motion.div
-        className="relative flex h-full flex-col items-center justify-center px-6 pb-14"
+        className="relative flex h-full flex-col items-center justify-center px-6"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.13 } } }}
@@ -80,16 +80,6 @@ export default function BoothScreen() {
         </div>
       </motion.div>
 
-      {/* 경품 안내는 화면 아래에 밝게 — 관람객이 마지막으로 챙겨야 할 정보입니다 */}
-      <motion.div
-        className="absolute inset-x-0 bottom-0 bg-white px-6 pt-5 text-center"
-        style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5, delay: 0.7, ease: 'easeOut' }}
-      >
-        <p className="text-[17px] font-bold text-[#0a0b12]">{booth.goods}</p>
-      </motion.div>
     </div>
   )
 }

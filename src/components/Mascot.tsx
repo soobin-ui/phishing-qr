@@ -7,7 +7,8 @@
  * 어두운 배경에 올릴 때는 outline 을 false 로 주면 윤곽선이 빠집니다.
  */
 export default function Mascot({ size = 88, outline = true }: { size?: number; outline?: boolean }) {
-  const edge = outline ? '#dfe2e6' : 'none'
+  const edge = outline ? '#cbd2d9' : 'none'
+  const bodyFill = outline ? '#fdfdfe' : '#ffffff'
 
   return (
     <svg
@@ -24,7 +25,7 @@ export default function Mascot({ size = 88, outline = true }: { size?: number; o
         cy="196"
         rx="16"
         ry="27"
-        fill="#ffffff"
+        fill={bodyFill}
         stroke={edge}
         strokeWidth="2"
         transform="rotate(-18 41 196)"
@@ -34,7 +35,7 @@ export default function Mascot({ size = 88, outline = true }: { size?: number; o
         cy="196"
         rx="16"
         ry="27"
-        fill="#ffffff"
+        fill={bodyFill}
         stroke={edge}
         strokeWidth="2"
         transform="rotate(18 149 196)"
@@ -47,7 +48,7 @@ export default function Mascot({ size = 88, outline = true }: { size?: number; o
         width="78"
         height="98"
         rx="32"
-        fill="#ffffff"
+        fill={bodyFill}
         stroke={edge}
         strokeWidth="2"
       />
