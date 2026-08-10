@@ -31,14 +31,19 @@ export default function RevealScreen({ answers, onNext }: Props) {
 
   // 아래로 미는 동안 화면 요소가 같이 따라 움직입니다.
   // 경광봉과 글씨의 이동 속도를 다르게 줘서 깊이감이 생깁니다.
+  //
+  // ⚠️ 입력 범위는 반드시 0 에서 시작해 1 로 끝나야 합니다.
+  //    [0, 0.55] 처럼 중간에서 끊으면 값이 갱신되지 않아 글자가 통째로 사라집니다.
+  //    중간을 조절하고 싶으면 아래처럼 정거장을 더 찍으세요.
   const scrollRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ container: scrollRef })
-  const barY = useTransform(scrollYProgress, [0, 1], [0, -70])
-  const questionY = useTransform(scrollYProgress, [0, 1], [0, -130])
-  const leavingOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0])
-  const cueOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
-  const afterY = useTransform(scrollYProgress, [0, 1], [90, 0])
-  const afterOpacity = useTransform(scrollYProgress, [0.2, 0.8], [0, 1])
+  const barY = useTransform(scrollYProgress, [0, 1], [0, -60])
+  const questionY = useTransform(scrollYProgress, [0, 1], [0, -95])
+  // 완전히 사라지지 않습니다 — 화면 밖으로 밀려나는 것만으로 충분합니다
+  const leavingOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [1, 0.7, 0.4])
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.25, 1], [1, 0, 0])
+  const afterY = useTransform(scrollYProgress, [0, 1], [70, 0])
+  const afterOpacity = useTransform(scrollYProgress, [0, 0.15, 0.55, 1], [0, 0.15, 1, 1])
 
   const punchLines = cards.length > 0 ? reveal.punch.lines : reveal.punch.zeroLines
 
