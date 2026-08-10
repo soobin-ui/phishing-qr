@@ -63,6 +63,14 @@ npm install
 npm run dev      # 개발 (http://localhost:5176)
 npm run build    # 배포용 정적 파일 생성 → dist/
 npm run preview  # 빌드 결과 확인
+npm run shots    # 각 화면을 실제로 찍어서 tools/shots/ 에 PNG 로 저장
+```
+
+`npm run shots` 는 PC에 설치된 크롬으로 폼 입력부터 부스 유도까지 자동으로 돌면서
+14장을 찍습니다. 화면을 눈으로 확인할 때 쓰세요. 배포본을 찍으려면:
+
+```bash
+npm run shots -- https://soobin-ui.github.io/phishing-qr/
 ```
 
 **실제 휴대폰에서 테스트**: PC와 휴대폰이 같은 와이파이에 있어야 합니다.
