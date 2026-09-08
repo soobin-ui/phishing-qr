@@ -207,7 +207,11 @@ export default function FormScreen({ onSubmit }: Props) {
               {form.requiredPopup.title}
             </p>
             <p className="mt-2.5 text-[15px] leading-relaxed break-keep text-gray-600">
-              {form.requiredPopup.body}
+              {lines(form.requiredPopup.body).map((line, i) => (
+                <span key={i} className="block">
+                  {line}
+                </span>
+              ))}
             </p>
 
             {/* 무엇을 안 적었는지 그대로 보여줍니다 */}
