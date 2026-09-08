@@ -44,18 +44,46 @@ export default function FormScreen({ onSubmit }: Props) {
   const [agreedOptional, setAgreedOptional] = useState(false)
   const [noticeOpen, setNoticeOpen] = useState(false)
   const [consentError, setConsentError] = useState(false)
+  /** 비워 둔 채 제출을 눌렀던 필수 항목 — 팝업을 닫아도 빨간 테두리로 남습니다 */
+  const [missing, setMissing] = useState<string[]>([])
+  const [popupOpen, setPopupOpen] = useState(false)
   const consentRef = useRef<HTMLDivElement>(null)
 
   const setValue = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
+    // 적기 시작하면 그 항목의 빨간 테두리는 바로 풀어줍니다
+    setMissing((prev) => (prev.includes(id) && value.trim() !== '' ? prev.filter((x) => x !== id) : prev))
+  }
+
+  /** 아직 비어 있는 필수 항목 */
+  const emptyRequired = () =>
+    fields.filter((f) => f.required && (answers[f.id] ?? '').trim() === '')
+
+  /** 팝업을 닫으면 안 적은 첫 칸으로 데려다 놓습니다 */
+  const closePopup = () => {
+    setPopupOpen(false)
+    const first = missing[0]
+    if (!first) return
+    const el = document.getElementById(first)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 스크롤이 끝난 뒤에 커서를 넣어야 화면이 튀지 않습니다
+    window.setTimeout(() => el?.focus({ preventScroll: true }), 320)
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     // ★ 절대 원칙: 어떤 경우에도 폼이 실제로 전송되지 않게 막습니다.
     e.preventDefault()
 
-    // 입력 항목은 전부 비워도 통과시킵니다(유효성 검사 없음).
-    // 다만 [필수] 동의는 일반 응모 폼과 똑같이 체크를 요구합니다.
+    // 이름·휴대폰·생년월일은 비워 두면 넘어가지 못합니다(form.json 의 required).
+    // 값이 맞는지는 보지 않습니다 — 아무 글자나 적어도 통과입니다.
+    const empty = emptyRequired()
+    if (empty.length > 0) {
+      setMissing(empty.map((f) => f.id))
+      setPopupOpen(true)
+      return
+    }
+
+    // [필수] 동의는 일반 응모 폼과 똑같이 체크를 요구합니다.
     if (!agreedRequired) {
       setConsentError(true)
       consentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -134,6 +162,7 @@ export default function FormScreen({ onSubmit }: Props) {
                 <Field
                   def={def}
                   value={answers[def.id] ?? ''}
+                  invalid={missing.includes(def.id)}
                   onChange={(v) => setValue(def.id, v)}
                 />
               </motion.div>
@@ -219,6 +248,59 @@ export default function FormScreen({ onSubmit }: Props) {
           <div className="h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
         </form>
       </div>
+
+      {/* ── 필수 항목 안내 팝업 ────────────────────────
+          ★ 흔한 응모 폼이 띄우는 그 창처럼 보여야 합니다. 꾸미지 마세요. */}
+      {popupOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="required-popup-title"
+        >
+          <motion.div
+            className="absolute inset-0 bg-black/45"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.16 }}
+            onClick={closePopup}
+          />
+
+          <motion.div
+            className="relative w-full max-w-[320px] rounded-2xl bg-white px-6 pt-7 pb-5 text-center shadow-[0_18px_40px_rgba(0,0,0,0.3)]"
+            initial={{ opacity: 0, scale: 0.92, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+          >
+            <p id="required-popup-title" className="text-[18px] leading-snug break-keep font-bold text-gray-900">
+              {form.requiredPopup.title}
+            </p>
+            <p className="mt-2.5 text-[15px] leading-relaxed break-keep text-gray-600">
+              {form.requiredPopup.body}
+            </p>
+
+            {/* 무엇을 안 적었는지 그대로 보여줍니다 */}
+            <ul className="mt-4 space-y-1.5 rounded-xl bg-gray-50 px-4 py-3 text-left">
+              {fields
+                .filter((f) => missing.includes(f.id))
+                .map((f) => (
+                  <li key={f.id} className="text-[15px] font-medium text-gray-800">
+                    <span className="mr-1.5 text-[#e0342b]">*</span>
+                    {f.label}
+                  </li>
+                ))}
+            </ul>
+
+            <button
+              type="button"
+              onClick={closePopup}
+              className="mt-5 h-12 w-full rounded-xl bg-[#263b7c] text-[16px] font-bold text-white active:bg-[#1c2e63]"
+            >
+              {form.requiredPopup.button}
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
@@ -229,6 +311,9 @@ const inputClass =
   'transition-[border-color,box-shadow,background-color] duration-200 ' +
   'focus:border-[#1b64da] focus:bg-[#f7faff] focus:shadow-[0_2px_10px_rgba(27,100,218,0.18)] focus:outline-none'
 
+// 비워 둔 채 제출을 눌렀던 칸 — 어디를 안 적었는지 팝업을 닫은 뒤에도 보이게
+const invalidClass = '!border-[#e0342b] !bg-[#fff6f5]'
+
 // 드롭다운 오른쪽 화살표 (외부 이미지 요청이 생기지 않도록 인라인 SVG로 그립니다)
 const caret =
   "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>\")"
@@ -236,16 +321,26 @@ const caret =
 function Field({
   def,
   value,
+  invalid,
   onChange,
 }: {
   def: FieldDef
   value: string
+  /** 비워 둔 채 제출을 눌렀던 필수 항목 — 테두리를 빨갛게 */
+  invalid: boolean
   onChange: (value: string) => void
 }) {
+  const box = invalid ? `${inputClass} ${invalidClass}` : inputClass
+
   return (
     <div>
       <label htmlFor={def.id} className="mb-1.5 block text-[16px] font-medium text-gray-800">
         {def.label}
+        {def.required && (
+          <span className="ml-1 text-[#e0342b]" aria-hidden="true">
+            *
+          </span>
+        )}
       </label>
 
       {def.type === 'select' ? (
@@ -253,7 +348,7 @@ function Field({
           id={def.id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`${inputClass} appearance-none pr-9 ${value ? '' : 'text-gray-400'}`}
+          className={`${box} appearance-none pr-9 ${value ? '' : 'text-gray-400'}`}
           style={{
             backgroundImage: caret,
             backgroundRepeat: 'no-repeat',
@@ -270,7 +365,8 @@ function Field({
       ) : (
         <input
           id={def.id}
-          className={inputClass}
+          className={box}
+          aria-required={def.required || undefined}
           placeholder={def.placeholder}
           autoComplete="off"
           value={value}

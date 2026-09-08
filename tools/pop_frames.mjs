@@ -43,7 +43,18 @@ const clickByText = (t) =>
 // [4] 부스 유도까지 밀고 갑니다
 await clickByText('응모하기')
 await wait(500)
-await page.evaluate(() => document.querySelectorAll('input[type=checkbox]')[0].click())
+// 이름·휴대폰·생년월일은 필수 — 비우면 팝업에 막힙니다
+await page.evaluate(() => {
+  const set = (id, v) => {
+    const el = document.getElementById(id)
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v)
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+  set('name', '홍길동')
+  set('phone', '01012345678')
+  set('birth', '19960314')
+  document.querySelectorAll('input[type=checkbox]')[0].click()
+})
 await clickByText('응모하기')
 await page.waitForSelector('[data-role="punch-next"]', { timeout: 20000 })
 await page.evaluate(() => document.querySelector('[data-role="punch-next"]').click())

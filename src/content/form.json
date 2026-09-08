@@ -19,33 +19,31 @@
   },
 
   "_항목설명": "type — text: 일반 글자 / phone: 숫자키패드+하이픈자동 / digits: 숫자만 / email: 이메일 / select: 드롭다운",
+  "_필수설명": "required: true 를 주면 라벨에 빨간 * 가 붙고, 비워 두면 제출할 때 팝업이 뜹니다.",
   "fields": [
     {
       "id": "name",
       "label": "이름",
       "type": "text",
+      "required": true,
       "placeholder": "이름을 입력해 주세요"
     },
     {
       "id": "phone",
       "label": "휴대폰 번호",
       "type": "phone",
+      "required": true,
       "placeholder": "010-0000-0000"
     },
     {
       "id": "birth",
       "label": "생년월일",
       "type": "digits",
+      "required": true,
       "placeholder": "숫자 8자리 (예: 19960314)",
       "maxLength": 8,
       "_format설명": "date8 — 빨간 화면에서 19960314 를 1996.03.14 로 보여줍니다",
       "format": "date8"
-    },
-    {
-      "id": "org",
-      "label": "소속 (학교/회사)",
-      "type": "text",
-      "placeholder": "소속을 입력해 주세요"
     },
     {
       "id": "interest",
@@ -101,6 +99,13 @@
     "requiredError": "필수 항목입니다.",
     "_안내문설명": "이 내용은 100% 사실이어야 합니다. 빨간 화면 마지막에 그대로 다시 등장합니다.",
     "notice": "본 체험에는 참가자를 속이려는 연출이 포함되어 있습니다.\n입력하신 내용은 서버로 전송되거나 저장되지 않으며,\n이 브라우저 안에서만 사용된 후 사라집니다.\n응모 여부와 관계없이 경품은 모든 참여자에게 지급됩니다."
+  },
+
+  "_팝업설명": "필수 항목을 비우고 [응모하기] 를 눌렀을 때 뜨는 창입니다. 안 적은 항목 이름이 목록으로 들어갑니다.",
+  "requiredPopup": {
+    "title": "필수 항목을 입력해 주세요.",
+    "body": "아래 항목을 모두 입력하셔야 응모가 완료됩니다.",
+    "button": "확인"
   },
 
   "submitButton": "응모하기"

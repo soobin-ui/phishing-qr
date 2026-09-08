@@ -42,7 +42,18 @@ async function toBooth(page) {
 
   await clickByText('응모하기') // [0] 시작 → [1] 폼
   await wait(500)
-  await page.evaluate(() => document.querySelectorAll('input[type=checkbox]')[0].click())
+  // 이름·휴대폰·생년월일은 필수 — 비우면 팝업에 막힙니다
+  await page.evaluate(() => {
+    const set = (id, v) => {
+      const el = document.getElementById(id)
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v)
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    set('name', '홍길동')
+    set('phone', '01012345678')
+    set('birth', '19960314')
+    document.querySelectorAll('input[type=checkbox]')[0].click()
+  })
   await clickByText('응모하기') // [1] 폼 → [2] 접수 완료 → [3] 빨간 화면
 
   // 큰 글씨 화면의 [다음] 이 나타날 때까지 기다렸다가 누릅니다(등장 시점이 기기마다 다릅니다)

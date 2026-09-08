@@ -5,6 +5,8 @@ export interface FieldDef {
   id: string
   label: string
   type: FieldType
+  /** true 면 라벨에 빨간 * 가 붙고, 비워 두면 제출할 때 팝업이 뜹니다. */
+  required?: boolean
   placeholder?: string
   maxLength?: number
   options?: string[]

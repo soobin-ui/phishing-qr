@@ -80,7 +80,6 @@ await page.evaluate(() => {
   set('name', '홍길동')
   set('phone', '01012345678')
   set('birth', '19960314')
-  set('org', '한빛대학교')
   set('interest', '취업·이직')
   set('region', '경기')
   set('email', 'gildong@example.com')
