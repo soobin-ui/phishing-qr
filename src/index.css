@@ -736,58 +736,67 @@ button {
   clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
 }
 
-/* ── 부스 유도 표지판 — 계속 톡톡 튀는 노란 판 ────────
-   체험이 끝난 사람의 눈이 마지막으로 붙잡혀야 하는 곳입니다.
-   쉬는 구간을 길게 두고 한 번씩 통 튀게 해야 눈에 걸립니다
-   (계속 커졌다 작아지면 배경처럼 읽혀서 오히려 안 보입니다).
+/* ── 부스 유도 표지판 — 쉬지 않고 통통 튀는 노란 판 ────
+   체험이 끝난 사람의 눈이 마지막으로 붙잡혀야 하는 곳이라
+   멈추는 구간 없이 계속 튑니다.
 
-   ⚠️ 밝기가 깜빡이는 게 아니라 크기만 변하고, 주기도 2.4초(0.4Hz)라
+   ★ 그냥 커졌다 작아지는 게 아니라 '통통'으로 보이게 하는 두 가지 —
+       transform-origin 을 바닥(50% 100%)에 둬서 판이 바닥을 딛고 뜨게,
+       그리고 뜰 때는 세로로 늘리고 착지할 때는 납작하게 눌러줍니다.
+
+   ⚠️ 밝기가 깜빡이는 게 아니라 크기·위치만 변하고, 한 번 도는 데 1.05초(약 1Hz)라
       광과민성 기준(초당 3회)과는 무관합니다. 빨간 화면의 --qr-half 와는 다른 이야기. */
 @keyframes ps-pop {
-  0%,
-  58% {
-    transform: scale(1);
+  0% {
+    transform: translateY(0) scale(1, 1);
   }
-  67% {
-    transform: scale(1.055);
+  16% {
+    /* 바닥을 차기 직전 살짝 웅크림 */
+    transform: translateY(0) scale(1.02, 0.972);
   }
-  76% {
-    transform: scale(0.984);
+  38% {
+    /* 가장 높이 떠서 세로로 늘어난 순간 */
+    transform: translateY(-7px) scale(0.985, 1.03);
   }
-  85% {
-    transform: scale(1.026);
+  60% {
+    /* 착지 — 납작하게 눌립니다 */
+    transform: translateY(0) scale(1.03, 0.962);
   }
-  93%,
+  78% {
+    /* 작게 한 번 더 */
+    transform: translateY(-2px) scale(0.995, 1.012);
+  }
   100% {
-    transform: scale(1);
+    transform: translateY(0) scale(1, 1);
   }
 }
 
 .ps-pop {
-  animation: ps-pop 2.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  animation: ps-pop 1.05s ease-in-out infinite;
   will-change: transform;
 }
 
-/* 튈 때 같이 번지는 금색 빛 — 판 뒤에 깔립니다.
+/* 착지할 때 바닥에서 번지는 금색 빛 — 판 뒤에 깔립니다.
    ★ 흐리게(blur) 깔아야 '빛'으로 보입니다. 또렷한 사각형으로 두면
      남색 위에서 회색 테두리처럼 죽어 보입니다. */
 @keyframes ps-pop-ring {
   0%,
-  58% {
+  40% {
     opacity: 0;
     transform: scale(0.98);
   }
-  68% {
-    opacity: 0.85;
+  62% {
+    opacity: 0.5;
     transform: scale(1.03);
   }
   100% {
     opacity: 0;
-    transform: scale(1.16);
+    transform: scale(1.14);
   }
 }
 
 .ps-pop-ring {
   filter: blur(13px);
-  animation: ps-pop-ring 2.4s ease-out infinite;
+  animation: ps-pop-ring 1.05s ease-out infinite;
 }
