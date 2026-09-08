@@ -74,36 +74,22 @@ export default function BoothScreen() {
         </motion.div>
 
         {/* ── 체험존 안내 ─────────────────────────
-            누를 수 있는 버튼이 아닙니다 — 발걸음을 옮기라는 표지판입니다. */}
-        <motion.div
-          variants={rise}
-          className="mt-4 flex items-center justify-center gap-2.5 rounded-2xl bg-[#feca36] px-4 py-4 shadow-[0_6px_0_#d9a316,0_14px_24px_rgba(24,44,96,0.42)]"
-        >
-          <motion.svg
-            width="22"
-            height="22"
-            viewBox="0 0 22 22"
-            aria-hidden="true"
-            className="shrink-0"
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <path
-              d="M3 11h15M12 5l6 6-6 6"
-              fill="none"
-              stroke="#1c2e63"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </motion.svg>
-          <span className="text-center text-[17px] leading-snug font-bold text-[#1c2e63]">
-            {lines(booth.zone).map((line, i) => (
-              <span key={i} className="block">
-                {line}
-              </span>
-            ))}
-          </span>
+            누를 수 있는 버튼이 아닙니다 — 발걸음을 옮기라는 표지판입니다.
+            체험이 끝난 사람의 눈이 마지막으로 붙잡혀야 하는 곳이라
+            한 번씩 통 튀게 했습니다(index.css의 ps-pop). */}
+        <motion.div variants={rise} className="relative mt-4">
+          {/* 튈 때 같이 번지는 금색 테 — 판 뒤에 깔립니다 */}
+          <span className="ps-pop-ring pointer-events-none absolute inset-0 rounded-2xl bg-[#feca36]" />
+
+          <div className="ps-pop relative rounded-2xl bg-[#feca36] px-5 py-4 text-center shadow-[0_6px_0_#d9a316,0_14px_24px_rgba(24,44,96,0.42)]">
+            <span className="text-[clamp(19px,5.4vw,23px)] leading-[1.35] font-bold text-[#1c2e63]">
+              {lines(booth.zone).map((line, i) => (
+                <span key={i} className="block">
+                  {line}
+                </span>
+              ))}
+            </span>
+          </div>
         </motion.div>
       </motion.div>
     </div>

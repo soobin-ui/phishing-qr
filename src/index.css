@@ -705,7 +705,9 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .ps-confetti,
   .ps-spark,
-  .ps-breathe {
+  .ps-breathe,
+  .ps-pop,
+  .ps-pop-ring {
     animation: none !important;
   }
 }
@@ -732,4 +734,60 @@ button {
 /* 포스터의 남색 리본 — 양 끝이 안쪽으로 깎인 띠 */
 .ps-ribbon {
   clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
+}
+
+/* ── 부스 유도 표지판 — 계속 톡톡 튀는 노란 판 ────────
+   체험이 끝난 사람의 눈이 마지막으로 붙잡혀야 하는 곳입니다.
+   쉬는 구간을 길게 두고 한 번씩 통 튀게 해야 눈에 걸립니다
+   (계속 커졌다 작아지면 배경처럼 읽혀서 오히려 안 보입니다).
+
+   ⚠️ 밝기가 깜빡이는 게 아니라 크기만 변하고, 주기도 2.4초(0.4Hz)라
+      광과민성 기준(초당 3회)과는 무관합니다. 빨간 화면의 --qr-half 와는 다른 이야기. */
+@keyframes ps-pop {
+  0%,
+  58% {
+    transform: scale(1);
+  }
+  67% {
+    transform: scale(1.055);
+  }
+  76% {
+    transform: scale(0.984);
+  }
+  85% {
+    transform: scale(1.026);
+  }
+  93%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ps-pop {
+  animation: ps-pop 2.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* 튈 때 같이 번지는 금색 빛 — 판 뒤에 깔립니다.
+   ★ 흐리게(blur) 깔아야 '빛'으로 보입니다. 또렷한 사각형으로 두면
+     남색 위에서 회색 테두리처럼 죽어 보입니다. */
+@keyframes ps-pop-ring {
+  0%,
+  58% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  68% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.16);
+  }
+}
+
+.ps-pop-ring {
+  filter: blur(13px);
+  animation: ps-pop-ring 2.4s ease-out infinite;
 }
