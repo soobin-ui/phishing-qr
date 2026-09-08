@@ -24,10 +24,113 @@ const RED = '#a00d14'
 // 경광등 화면은 바탕이 어두워야 빨강·파랑이 살아납니다
 const NIGHT = '#0a0b12'
 
+/**
+ * 한 줄씩 타자기처럼 찍습니다.
+ * 되돌려주는 값은 줄마다 '지금까지 찍힌 글자 수'입니다.
+ *
+ * ★ 이 화면에서만 JS 로 애니메이션을 굴립니다 — 한 번 지나가고 끝나는 연출이라
+ *   무한 반복 애니메이션(경광등 등)을 CSS 로 두는 원칙과는 별개입니다.
+ * ★ 기기에서 '동작 줄이기'를 켜 두었으면 타자 없이 한 번에 다 보여줍니다.
+ */
+function useTypewriter(texts: string[], charMs: number, lineGapMs: number, reduced: boolean) {
+  const key = JSON.stringify(texts)
+  const [typed, setTyped] = useState<number[]>(() => texts.map(() => 0))
+
+  useEffect(() => {
+    if (reduced) {
+      setTyped(texts.map((t) => t.length))
+      return
+    }
+
+    setTyped(texts.map(() => 0))
+    let line = 0
+    let ch = 0
+    let timer = 0
+
+    const tick = () => {
+      if (line >= texts.length) return
+
+      // ★ 지금 줄·글자 수를 상수로 붙잡아 두고 넘깁니다.
+      //   setTyped 안에서 line·ch 를 그대로 읽으면 안 됩니다 —
+      //   React 가 그 함수를 나중에 실행하는데, 그때는 이미 다음 줄로 넘어가 있어서
+      //   각 줄이 마지막 한 글자를 남기고 멈춰버립니다.
+      const atLine = line
+      const atCh = ch + 1
+      ch = atCh
+
+      setTyped((prev) => {
+        const next = [...prev]
+        next[atLine] = atCh
+        return next
+      })
+
+      if (atCh >= texts[atLine].length) {
+        line += 1
+        ch = 0
+        timer = window.setTimeout(tick, lineGapMs)
+      } else {
+        timer = window.setTimeout(tick, charMs)
+      }
+    }
+
+    timer = window.setTimeout(tick, lineGapMs)
+    return () => clearTimeout(timer)
+    // texts 는 매번 새 배열이라 내용(key)으로 비교합니다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, charMs, lineGapMs, reduced])
+
+  return typed
+}
+
+/** 기기 설정의 '동작 줄이기' */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const on = () => setReduced(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return reduced
+}
+
+/** NO. 2026-0908-1423 — 꾸며낸 번호가 아니라 지금 접속한 시각입니다. */
+function caseNumber(d: Date) {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`
+}
+
 export default function RevealScreen({ answers, onNext }: Props) {
   const cards = useMemo(() => buildCards(answers), [answers])
   const [stage, setStage] = useState<Stage>('alarm')
   const alarming = stage === 'alarm' || stage === 'punch'
+  const reduced = usePrefersReducedMotion()
+
+  // 유출 기록에 한 줄씩 찍힐 문장들 — "이름: 홍길동"
+  const rows = useMemo(() => cards.map((c) => `${c.label}: ${c.value}`), [cards])
+  const typed = useTypewriter(
+    rows,
+    reveal.timing.typeCharMs,
+    reveal.timing.typeLineGapMs,
+    reduced,
+  )
+  // 지금 찍히고 있는 줄(커서를 붙일 자리). 다 찍혔으면 -1.
+  const cursorLine = typed.findIndex((n, i) => n < rows[i].length)
+
+  // 다 찍는 데 걸리는 시간 — 큰 글씨로 넘어가는 시점이 여기에 맞춰집니다
+  const typingMs = useMemo(
+    () =>
+      reduced
+        ? 400
+        : rows.reduce(
+            (sum, t) => sum + t.length * reveal.timing.typeCharMs + reveal.timing.typeLineGapMs,
+            reveal.timing.typeLineGapMs,
+          ),
+    [rows, reduced],
+  )
+
+  const caseNo = useMemo(() => caseNumber(new Date()), [])
 
   // 아래로 미는 동안 화면 요소가 같이 따라 움직입니다.
   // 경광봉과 글씨의 이동 속도를 다르게 줘서 깊이감이 생깁니다.
@@ -45,7 +148,14 @@ export default function RevealScreen({ answers, onNext }: Props) {
   const afterY = useTransform(scrollYProgress, [0, 1], [70, 0])
   const afterOpacity = useTransform(scrollYProgress, [0, 0.15, 0.55, 1], [0, 0.15, 1, 1])
 
-  const punchLines = cards.length > 0 ? reveal.punch.lines : reveal.punch.zeroLines
+  // 이름을 적었으면 이름을 부르고, 아니면 이름 없는 판을 씁니다
+  const name = (answers.name ?? '').trim()
+  const punchLines =
+    cards.length === 0
+      ? reveal.punch.zeroLines
+      : name === ''
+        ? reveal.punch.linesNoName
+        : reveal.punch.lines
 
   const stopAlarmRef = useRef<() => void>(() => {})
   const tailTimerRef = useRef<number | undefined>(undefined)
@@ -74,7 +184,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
     stopAlarmRef.current = stopAlarm
     buzz([120, 90, 120, 90, 120, 90, 600])
 
-    let at = cards.length * T.rowStaggerMs + T.alarmHoldMs
+    let at = typingMs + T.alarmHoldMs
     timers.push(
       window.setTimeout(() => {
         setStage('punch')
@@ -91,7 +201,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
       stopAlarm()
       buzz(0)
     }
-  }, [cards.length, goQuestion])
+  }, [typingMs, goQuestion])
 
   return (
     <div
@@ -112,39 +222,39 @@ export default function RevealScreen({ answers, onNext }: Props) {
         </>
       )}
 
-      {/* ── 1단계 · 전송 로그 ────────────────────────── */}
+      {/* ── 1단계 · 유출 기록 ──────────────────────────
+          사건 기록처럼 생긴 판에, 참가자가 방금 적은 값이 한 글자씩 찍힙니다.
+          "내가 적은 그 글자"가 눈앞에서 타이핑되는 것이 이 화면의 전부입니다. */}
       <Layer active={stage === 'alarm'}>
         <div className="w-full max-w-[400px]">
-          <p className="mb-4 text-[16px] font-bold tracking-[0.2em] text-white/70">
-            {reveal.alarm.heading}
+          <span className="qr-beacon inline-block bg-white px-2 py-0.5 text-[13px] font-bold tracking-[0.12em] text-[#a00d14]">
+            {reveal.alarm.badge}
+          </span>
+
+          <h2 className="mt-3 text-[clamp(32px,9vw,42px)] leading-[1.1] font-black tracking-tight text-white">
+            {reveal.alarm.title}
+          </h2>
+
+          <p className="mt-1.5 text-[13px] tracking-[0.14em] text-white/45">
+            {reveal.alarm.caseLabel} {caseNo}
           </p>
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: reveal.timing.rowStaggerMs / 1000 } },
-            }}
-          >
-            {cards.map((card) => (
-              <motion.div
-                key={card.id}
-                className="flex items-center gap-3 border-b border-white/20 py-2.5"
-                variants={{
-                  hidden: { opacity: 0, x: 24 },
-                  show: { opacity: 1, x: 0, transition: { duration: 0.22 } },
-                }}
-              >
-                <span className="shrink-0 bg-white px-1.5 py-0.5 text-[14px] font-bold text-[#a00d14]">
-                  {reveal.alarm.badge}
-                </span>
-                <span className="shrink-0 text-[16px] text-white/60">{card.label}</span>
-                <span className="min-w-0 flex-1 text-right text-[18px] leading-snug font-bold break-all text-white">
-                  {card.value}
-                </span>
-              </motion.div>
-            ))}
-          </motion.div>
+
+          <div className="mt-4 h-px w-full bg-white/35" />
+
+          <div className="mt-4 space-y-2">
+            {rows.map((full, i) => {
+              // "이름: " 까지는 흐리게, 그 뒤 값은 굵고 하얗게
+              const labelEnd = cards[i].label.length + 2
+              const shown = full.slice(0, typed[i] ?? 0)
+              return (
+                <p key={cards[i].id} className="text-[17px] leading-snug break-all">
+                  <span className="text-white/55">{shown.slice(0, labelEnd)}</span>
+                  <span className="font-bold text-white">{shown.slice(labelEnd)}</span>
+                  {i === cursorLine && <span className="qr-caret text-white">|</span>}
+                </p>
+              )
+            })}
+          </div>
         </div>
       </Layer>
 
@@ -162,7 +272,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
             {punchLines.map((line, i) => (
               <motion.p
                 key={i}
-                className="text-[40px] leading-[1.14] font-black tracking-tighter text-white"
+                className="text-[clamp(27px,7.6vw,34px)] leading-[1.16] font-black tracking-tight break-keep text-white"
                 variants={{
                   hidden: { opacity: 0, y: 26, skewY: 3 },
                   show: {
@@ -173,7 +283,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
                   },
                 }}
               >
-                {fill(line, { count: cards.length })}
+                {fill(line, { count: cards.length, name })}
               </motion.p>
             ))}
             <motion.p

@@ -53,10 +53,18 @@ async function toBooth(page) {
     set('phone', '01012345678')
     set('birth', '19960314')
   })
-  await clickByText('응모하기') // [1] 폼 → [2] 접수 완료 → [3] 빨간 화면
+  await clickByText('응모하기') // [1] 폼 → [2] 빨간 화면
 
-  // 큰 글씨 화면의 [다음] 이 나타날 때까지 기다렸다가 누릅니다(등장 시점이 기기마다 다릅니다)
-  await page.waitForSelector('[data-role="punch-next"]', { timeout: 20000 })
+  // 큰 글씨 화면이 실제로 뜰 때까지 기다렸다가 누릅니다.
+  // ★ [다음] 버튼은 처음부터 DOM 에 있습니다(레이어를 겹쳐 두고 투명도만 바꾸므로).
+  //   그래서 waitForSelector 로는 안 되고, pointer-events 로 화면이 켜졌는지를 봐야 합니다.
+  await page.waitForFunction(
+    () => {
+      const b = document.querySelector('[data-role="punch-next"]')
+      return !!b && getComputedStyle(b).pointerEvents !== 'none'
+    },
+    { timeout: 25000 },
+  )
   await page.evaluate(() => document.querySelector('[data-role="punch-next"]').click())
   await wait(1400)
 

@@ -55,7 +55,13 @@ await page.evaluate(() => {
   set('birth', '19960314')
 })
 await clickByText('응모하기')
-await page.waitForSelector('[data-role="punch-next"]', { timeout: 20000 })
+await page.waitForFunction(
+    () => {
+      const b = document.querySelector('[data-role="punch-next"]')
+      return !!b && getComputedStyle(b).pointerEvents !== 'none'
+    },
+    { timeout: 25000 },
+  )
 await page.evaluate(() => document.querySelector('[data-role="punch-next"]').click())
 await wait(1400)
 await page.evaluate(() => {

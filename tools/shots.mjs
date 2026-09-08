@@ -85,14 +85,23 @@ await page.evaluate(() => {
   ;[...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '응모하기').click()
 })
 
-// [2] 빨간 화면 — 누르는 즉시 시작합니다. 애니메이션이라 프레임을 여러 장
+// [2] 빨간 화면 — 누르는 즉시 시작합니다. 값이 한 글자씩 찍히는 중
 await wait(900)
-await shot('alarm-a')
-await wait(700)
-await shot('alarm-b')
+await shot('leak-typing')
+await wait(1400)
+await shot('leak-typing2')
 
-// 큰 글씨 + [다음] 버튼
-await wait(1600)
+// 큰 글씨 — 다 찍히고 뜹니다. 시간이 항목 길이에 따라 달라지므로 버튼이 뜰 때까지 기다립니다.
+await page.waitForFunction(
+    () => {
+      const b = document.querySelector('[data-role="punch-next"]')
+      return !!b && getComputedStyle(b).pointerEvents !== 'none'
+    },
+    { timeout: 25000 },
+  )
+await wait(200)
+await shot('leak-done')
+await wait(900)
 await shot('punch')
 
 // [다음] 을 눌러서 넘어가는지 확인 (자동으로도 넘어가지만 버튼이 먼저 동작해야 합니다)
