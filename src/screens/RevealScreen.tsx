@@ -20,9 +20,8 @@ interface Props {
  */
 type Stage = 'alarm' | 'punch' | 'question'
 
-const RED = '#a00d14'
-// 경광등 화면은 바탕이 어두워야 빨강·파랑이 살아납니다
-const NIGHT = '#0a0b12'
+// 1·2단계(유출 기록·마지막 문구)와 경광봉 화면 모두 검은 바탕입니다
+const NIGHT = '#05060a'
 
 /**
  * 한 줄씩 타자기처럼 찍습니다.
@@ -95,10 +94,22 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
-/** NO. 2026-0908-1423 — 꾸며낸 번호가 아니라 지금 접속한 시각입니다. */
-function caseNumber(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`
+/** 깜빡이는 빨간 네온 삼각형. 이 화면의 상징입니다. */
+function NeonTriangle({ small = false }: { small?: boolean }) {
+  const w = small ? 104 : 150
+  return (
+    <svg
+      className="qr-neon"
+      width={w}
+      height={(w * 132) / 150}
+      viewBox="0 0 150 132"
+      aria-hidden="true"
+    >
+      <path d="M75 10 L142 122 H8 Z" fill="none" stroke="#ff2d3c" strokeWidth="9" strokeLinejoin="round" />
+      <path d="M75 48 V86" stroke="#ff2d3c" strokeWidth="10" strokeLinecap="round" />
+      <circle cx="75" cy="103" r="6" fill="#ff2d3c" />
+    </svg>
+  )
 }
 
 export default function RevealScreen({ answers, onNext }: Props) {
@@ -107,8 +118,9 @@ export default function RevealScreen({ answers, onNext }: Props) {
   const alarming = stage === 'alarm' || stage === 'punch'
   const reduced = usePrefersReducedMotion()
 
-  // 유출 기록에 한 줄씩 찍힐 문장들 — "이름: 홍길동"
-  const rows = useMemo(() => cards.map((c) => `${c.label}: ${c.value}`), [cards])
+  // 찍히는 건 값뿐입니다. 라벨은 그 줄 차례가 오면 바로 떠 있습니다
+  // (라벨까지 한 글자씩 찍으면 값이 나오기 전에 죽는 시간이 생깁니다).
+  const rows = useMemo(() => cards.map((c) => c.value), [cards])
   const typed = useTypewriter(
     rows,
     reveal.timing.typeCharMs,
@@ -130,7 +142,6 @@ export default function RevealScreen({ answers, onNext }: Props) {
     [rows, reduced],
   )
 
-  const caseNo = useMemo(() => caseNumber(new Date()), [])
 
   // 아래로 미는 동안 화면 요소가 같이 따라 움직입니다.
   // 경광봉과 글씨의 이동 속도를 다르게 줘서 깊이감이 생깁니다.
@@ -205,92 +216,84 @@ export default function RevealScreen({ answers, onNext }: Props) {
 
   return (
     <div
-      className="fixed inset-0 overflow-hidden"
-      style={{
-        backgroundColor: alarming ? RED : NIGHT,
-        transition: 'background-color 260ms ease',
-      }}
+      className={`fixed inset-0 overflow-hidden ${alarming ? 'qr-night' : ''}`}
+      style={{ backgroundColor: NIGHT }}
     >
-      {/* ── 경광등 ────────────────────────────────────
-          좌우에서 번갈아 1초 주기로 밝아집니다.
-          ⚠️ 이 속도를 올리지 마세요. 빠른 적색 점멸은 광과민성 발작을 유발할 수 있고,
-             불특정 다수·미성년 관람객이 오는 부스입니다. */}
-      {alarming && (
-        <>
-          <Beacon position="12% 26%" delay={0} />
-          <Beacon position="88% 26%" delay={0.5} />
-        </>
-      )}
-
       {/* ── 1단계 · 유출 기록 ──────────────────────────
-          사건 기록처럼 생긴 판에, 참가자가 방금 적은 값이 한 글자씩 찍힙니다.
+          검은 화면에 빨간 네온 경고가 깜빡이고, 그 아래로
+          참가자가 방금 적은 값이 한 글자씩 찍힙니다.
           "내가 적은 그 글자"가 눈앞에서 타이핑되는 것이 이 화면의 전부입니다. */}
       <Layer active={stage === 'alarm'}>
-        <div className="w-full max-w-[400px]">
-          <span className="qr-beacon inline-block bg-white px-2 py-0.5 text-[13px] font-bold tracking-[0.12em] text-[#a00d14]">
+        <div className="flex w-full max-w-[400px] flex-col items-center text-center">
+          <NeonTriangle />
+
+          <span className="qr-neon qr-neon-tag mt-4 px-4 py-1 text-[clamp(20px,5.6vw,25px)] font-bold tracking-[0.14em]">
             {reveal.alarm.badge}
           </span>
 
-          <h2 className="mt-3 text-[clamp(32px,9vw,42px)] leading-[1.1] font-black tracking-tight text-white">
-            {reveal.alarm.title}
+          <h2 className="qr-neon-text mt-3 text-[clamp(33px,9.4vw,44px)] leading-[1.06] font-bold tracking-tight text-white">
+            {reveal.alarm.titleLines.map((line, i) => (
+              <span key={i} className="block">
+                {line}
+              </span>
+            ))}
           </h2>
 
-          <p className="mt-1.5 text-[13px] tracking-[0.14em] text-white/45">
-            {reveal.alarm.caseLabel} {caseNo}
-          </p>
-
-          <div className="mt-4 h-px w-full bg-white/35" />
-
-          <div className="mt-4 space-y-2">
-            {rows.map((full, i) => {
-              // "이름: " 까지는 흐리게, 그 뒤 값은 굵고 하얗게
-              const labelEnd = cards[i].label.length + 2
-              const shown = full.slice(0, typed[i] ?? 0)
+          {/* 적은 값 — 가운데 정렬, 한 줄씩 */}
+          <div className="mt-6 w-full">
+            {cards.map((card, i) => {
+              // 아직 차례가 오지 않은 줄은 라벨도 감춥니다 — 몇 개나 더 남았는지
+              // 미리 알려주지 않는 쪽이 조입니다.
+              const started = cursorLine === -1 || i <= cursorLine
               return (
-                <p key={cards[i].id} className="text-[17px] leading-snug break-all">
-                  <span className="text-white/55">{shown.slice(0, labelEnd)}</span>
-                  <span className="font-bold text-white">{shown.slice(labelEnd)}</span>
-                  {i === cursorLine && <span className="qr-caret text-white">|</span>}
-                </p>
+                <div key={card.id} className="mb-2.5">
+                  <p
+                    className="text-[11px] tracking-[0.24em] text-[#ff6a76] transition-opacity duration-300"
+                    style={{ opacity: started ? 1 : 0 }}
+                  >
+                    {card.label}
+                  </p>
+                  <p className="qr-neon-text min-h-[1.25em] text-[clamp(20px,6vw,25px)] leading-[1.25] font-bold break-all text-white">
+                    {card.value.slice(0, typed[i] ?? 0)}
+                    {i === cursorLine && <span className="qr-caret">|</span>}
+                  </p>
+                </div>
               )
             })}
           </div>
         </div>
       </Layer>
 
-      {/* ── 2단계 · 큰 글씨 한 방 ─────────────────────── */}
+      {/* ── 2단계 · 마지막 문구 ─────────────────────────
+          적은 값들은 사라지고, 이 문장만 서서히 떠오릅니다. */}
       <Layer active={stage === 'punch'}>
-        <div className={`w-full max-w-[400px] ${stage === 'punch' ? 'qr-jolt' : ''}`}>
+        <div className="flex w-full max-w-[400px] flex-col items-center text-center">
+          <NeonTriangle small />
+
           <motion.div
+            className="mt-7 w-full"
             initial="hidden"
             animate={stage === 'punch' ? 'show' : 'hidden'}
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.11 } },
-            }}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.34, delayChildren: 0.5 } } }}
           >
             {punchLines.map((line, i) => (
               <motion.p
                 key={i}
-                className="text-[clamp(27px,7.6vw,34px)] leading-[1.16] font-black tracking-tight break-keep text-white"
+                className="qr-neon-text text-[clamp(27px,7.6vw,34px)] leading-[1.24] font-bold tracking-tight break-keep text-white"
                 variants={{
-                  hidden: { opacity: 0, y: 26, skewY: 3 },
-                  show: {
-                    opacity: 1,
-                    y: 0,
-                    skewY: 0,
-                    transition: { duration: 0.38, ease: 'easeOut' },
-                  },
+                  hidden: { opacity: 0, y: 14 },
+                  show: { opacity: 1, y: 0, transition: { duration: 1, ease: 'easeOut' } },
                 }}
               >
                 {fill(line, { count: cards.length, name })}
               </motion.p>
             ))}
+
             <motion.p
-              className="mt-7 text-[15px] leading-relaxed text-white/60"
+              className="mt-8 text-[14px] leading-relaxed text-white/55"
               variants={{
-                hidden: { opacity: 0, y: 14 },
-                show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 1.1, ease: 'easeOut' } },
               }}
             >
               {lines(reveal.punch.note).map((line, i) => (
@@ -308,11 +311,11 @@ export default function RevealScreen({ answers, onNext }: Props) {
             <motion.button
               onClick={goQuestion}
               data-role="punch-next"
-              className="mt-9 h-14 w-full rounded-sm bg-white text-[17px] font-bold text-[#a00d14]"
+              className="mt-9 h-14 w-full rounded-sm bg-white text-[17px] font-bold text-[#0a0b12]"
               whileTap={{ scale: 0.97 }}
               variants={{
-                hidden: { opacity: 0, y: 16 },
-                show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+                hidden: { opacity: 0, y: 14 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
               }}
             >
               {reveal.punch.nextButton}
@@ -481,19 +484,6 @@ function PoliceBar() {
         <div className="qr-floor-blue" />
       </div>
     </div>
-  )
-}
-
-/** 1단계 경광등 한 짝. 좌우가 번갈아 밝아집니다(주기는 index.css 의 .qr-beacon). */
-function Beacon({ position, delay }: { position: string; delay: number }) {
-  return (
-    <div
-      className="qr-beacon pointer-events-none absolute inset-0"
-      style={{
-        background: `radial-gradient(circle at ${position}, rgba(255,86,86,0.95), rgba(255,0,0,0) 58%)`,
-        animationDelay: `${delay}s`,
-      }}
-    />
   )
 }
 

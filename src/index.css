@@ -824,3 +824,60 @@ button {
     animation: none !important;
   }
 }
+
+/* ── 빨간 화면 1·2단계 — 검은 바탕의 네온 경고 ──────────
+   유출 기록과 마지막 문구가 올라가는 바탕입니다. */
+.qr-night {
+  background:
+    radial-gradient(80% 55% at 50% 20%, rgba(190, 20, 30, 0.42), rgba(0, 0, 0, 0) 70%),
+    repeating-linear-gradient(90deg, rgba(255, 60, 60, 0.05) 0 2px, rgba(0, 0, 0, 0) 2px 6px),
+    #05060a;
+}
+
+/* 네온 — 빨간 유리관에 불이 들어온 것처럼 번지고, 1초에 한 번 꺼졌다 켜집니다.
+
+   ⚠️ 1Hz 입니다. 광과민성 발작 유발 기준이 초당 3회이므로 그 3분의 1 —
+      더 다급하게 만들고 싶어도 이 위로는 올리지 마세요.
+      불특정 다수·미성년 관람객이 오는 부스입니다. */
+.qr-neon {
+  filter: drop-shadow(0 0 6px #ff2d3c) drop-shadow(0 0 18px #ff2d3c)
+    drop-shadow(0 0 42px rgba(255, 45, 60, 0.7));
+  animation: qr-neon 1s ease-in-out infinite;
+}
+
+@keyframes qr-neon {
+  0%,
+  46%,
+  100% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.28;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+/* [경고] 상자 */
+.qr-neon-tag {
+  border: 3px solid #ff2d3c;
+  color: #ff5666;
+  text-shadow: 0 0 10px rgba(255, 45, 60, 0.9);
+  box-shadow:
+    0 0 16px rgba(255, 45, 60, 0.5),
+    inset 0 0 16px rgba(255, 45, 60, 0.25);
+}
+
+/* 흰 글씨에 빨간 빛이 배어 나오게 */
+.qr-neon-text {
+  text-shadow:
+    0 0 12px rgba(255, 60, 70, 0.8),
+    0 0 34px rgba(255, 45, 60, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-neon {
+    animation: none !important;
+  }
+}
