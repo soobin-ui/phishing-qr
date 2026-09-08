@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { form, fields, ui } from '../lib/content'
 import PosterBackground from '../components/PosterBackground'
-import mascotLeft from '../assets/mascot-left.webp'
+import mascotLeft from '../assets/mascot-left-nogift.webp'
+import mascotRight from '../assets/mascot-right-nogift.webp'
 import { unlockAudio } from '../lib/alarm'
 import { digitsOnly, formatPhone, lines } from '../lib/format'
 import type { Answers, FieldDef } from '../types'
@@ -85,7 +86,7 @@ export default function FormScreen({ onSubmit }: Props) {
               </span>
             </h1>
 
-            <p className="mt-3 max-w-[58%] text-[15px] leading-relaxed font-medium text-[#1c2e63]">
+            <p className="mt-3 max-w-[52%] text-[15px] leading-relaxed font-medium text-[#1c2e63]">
               {lines(form.header.description).map((line, i) => (
                 <span key={i} className="block">
                   {line}
@@ -94,14 +95,15 @@ export default function FormScreen({ onSubmit }: Props) {
             </p>
           </div>
 
-          {/* 캐릭터는 글줄 오른쪽 아래에 작게 — 금색 아크 위에 서 있습니다.
-              ★ 여기는 한 명만 세웁니다. 머리글이 좁아서 둘을 넣으면
-                선물상자끼리 겹쳐 뭉개집니다(둘 다 나오는 곳은 시작 화면과 부스 유도). */}
-          <img
-            src={mascotLeft}
-            alt=""
-            className="ps-mascot-shadow pointer-events-none absolute right-4 bottom-3 z-10 h-[120px] w-auto"
-          />
+          {/* 캐릭터 둘은 글줄 오른쪽 아래에 작게 — 금색 아크 위에 서 있습니다.
+              ★ 여기서는 발밑 선물상자를 뺀 이미지를 씁니다(-nogift).
+                머리글이 좁아 상자까지 넣으면 둘 사이에서 겹쳐 뭉개집니다.
+                상자가 함께 나오는 곳은 시작 화면과 부스 유도입니다.
+              ★ 두 높이(104 : 90)는 포스터에서의 크기 비입니다. 한쪽만 바꾸지 마세요. */}
+          <div className="pointer-events-none absolute right-3 bottom-3 z-10 flex items-end gap-2">
+            <img src={mascotLeft} alt="" className="ps-mascot-shadow h-[104px] w-auto" />
+            <img src={mascotRight} alt="" className="ps-mascot-shadow h-[90px] w-auto" />
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} noValidate autoComplete="off" className="px-5 py-6">
