@@ -97,7 +97,13 @@ export default function BoothScreen() {
               strokeLinejoin="round"
             />
           </motion.svg>
-          <span className="text-[17px] leading-snug font-bold text-[#1c2e63]">{booth.zone}</span>
+          <span className="text-center text-[17px] leading-snug font-bold text-[#1c2e63]">
+            {lines(booth.zone).map((line, i) => (
+              <span key={i} className="block">
+                {line}
+              </span>
+            ))}
+          </span>
         </motion.div>
       </motion.div>
     </div>
