@@ -60,14 +60,6 @@ await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 await wait(400)
 await shot('form-bottom')
 
-// [자세히] 펼친 상태
-await page.evaluate(() => {
-  const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '자세히')
-  if (b) b.click()
-})
-await wait(300)
-await shot('form-notice')
-
 // 값을 채우고 제출
 await page.evaluate(() => {
   const set = (id, v) => {
@@ -83,7 +75,6 @@ await page.evaluate(() => {
   set('interest', '취업·이직')
   set('region', '경기')
   set('email', 'gildong@example.com')
-  document.querySelectorAll('input[type=checkbox]')[0].click()
 })
 await wait(300)
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))

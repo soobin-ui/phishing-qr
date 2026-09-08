@@ -53,7 +53,6 @@ await page.evaluate(() => {
   set('name', '홍길동')
   set('phone', '01012345678')
   set('birth', '19960314')
-  document.querySelectorAll('input[type=checkbox]')[0].click()
 })
 await clickByText('응모하기')
 await page.waitForSelector('[data-role="punch-next"]', { timeout: 20000 })

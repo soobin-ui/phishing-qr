@@ -52,7 +52,6 @@ async function toBooth(page) {
     set('name', '홍길동')
     set('phone', '01012345678')
     set('birth', '19960314')
-    document.querySelectorAll('input[type=checkbox]')[0].click()
   })
   await clickByText('응모하기') // [1] 폼 → [2] 접수 완료 → [3] 빨간 화면
 

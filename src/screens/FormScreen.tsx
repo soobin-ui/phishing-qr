@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
@@ -40,14 +40,9 @@ const fieldRise: Variants = {
  */
 export default function FormScreen({ onSubmit }: Props) {
   const [answers, setAnswers] = useState<Answers>({})
-  const [agreedRequired, setAgreedRequired] = useState(false)
-  const [agreedOptional, setAgreedOptional] = useState(false)
-  const [noticeOpen, setNoticeOpen] = useState(false)
-  const [consentError, setConsentError] = useState(false)
   /** 비워 둔 채 제출을 눌렀던 필수 항목 — 팝업을 닫아도 빨간 테두리로 남습니다 */
   const [missing, setMissing] = useState<string[]>([])
   const [popupOpen, setPopupOpen] = useState(false)
-  const consentRef = useRef<HTMLDivElement>(null)
 
   const setValue = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
@@ -80,13 +75,6 @@ export default function FormScreen({ onSubmit }: Props) {
     if (empty.length > 0) {
       setMissing(empty.map((f) => f.id))
       setPopupOpen(true)
-      return
-    }
-
-    // [필수] 동의는 일반 응모 폼과 똑같이 체크를 요구합니다.
-    if (!agreedRequired) {
-      setConsentError(true)
-      consentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
@@ -169,80 +157,23 @@ export default function FormScreen({ onSubmit }: Props) {
             ))}
           </motion.div>
 
-          {/* ── 동의 영역 ─────────────────────────────── */}
-          <div ref={consentRef} className="mt-8 border-t border-gray-200 pt-5">
-            {/* [자세히] 버튼은 label 바깥에 둡니다 — 안에 두면 누를 때 체크박스까지 켜집니다 */}
-            <div className="flex items-start gap-2.5">
-              <label className="flex flex-1 items-start gap-2.5">
-                <input
-                  type="checkbox"
-                  checked={agreedRequired}
-                  onChange={(e) => {
-                    setAgreedRequired(e.target.checked)
-                    if (e.target.checked) setConsentError(false)
-                  }}
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-[#1b64da]"
-                />
-                <span className="flex-1 text-[16px] leading-relaxed text-gray-800">
-                  {form.consent.requiredLabel}
-                </span>
-              </label>
+          {/* ── 응모하기 ────────────────────────────
+              ★ 이메일 바로 아래입니다. 사이에 아무것도 두지 마세요.
+                망설일 틈 없이 누르게 하는 것이 이 화면의 전부입니다.
+              ★ 버튼이 쉬지 않고 통통 튑니다(index.css의 ps-pop). */}
+          <div className="relative mt-8">
+            {/* 튈 때 같이 번지는 금색 빛 — 버튼 뒤에 깔립니다 */}
+            <span className="ps-pop-ring pointer-events-none absolute inset-0 rounded-2xl bg-[#feca36]" />
+
+            <div className="ps-pop relative">
               <button
-                type="button"
-                onClick={() => setNoticeOpen((v) => !v)}
-                className="shrink-0 rounded border border-gray-300 px-2 py-1 text-[14px] text-gray-500"
+                type="submit"
+                className="ps-cta h-[58px] w-full rounded-2xl bg-[#feca36] text-[19px] font-bold text-[#1c2e63]"
               >
-                {form.consent.detailButton}
+                {form.submitButton}
               </button>
             </div>
-
-            {noticeOpen && (
-              <motion.div
-                className="overflow-hidden"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                transition={{ duration: 0.28, ease: 'easeOut' }}
-              >
-                <div className="mt-3 rounded-md bg-gray-50 p-4 text-[15px] leading-relaxed text-gray-600">
-                  {lines(form.consent.notice).map((line, i) => (
-                    <span key={i} className="block">
-                      {line}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {consentError && (
-              <motion.p
-                className="mt-2 pl-7 text-[15px] text-red-600"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.22 }}
-              >
-                {form.consent.requiredError}
-              </motion.p>
-            )}
-
-            <label className="mt-4 flex items-start gap-2.5">
-              <input
-                type="checkbox"
-                checked={agreedOptional}
-                onChange={(e) => setAgreedOptional(e.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 accent-[#1b64da]"
-              />
-              <span className="flex-1 text-[16px] leading-relaxed text-gray-800">
-                {form.consent.optionalLabel}
-              </span>
-            </label>
           </div>
-
-          <button
-            type="submit"
-            className="ps-cta mt-7 h-[58px] w-full rounded-2xl bg-[#feca36] text-[18px] font-bold text-[#1c2e63]"
-          >
-            {form.submitButton}
-          </button>
 
           {/* 키보드가 올라온 상태에서도 제출 버튼까지 스크롤이 닿도록 여백을 둡니다 */}
           <div className="h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
