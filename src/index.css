@@ -1,13 +1,33 @@
 @import 'tailwindcss';
 
 /*
-  폰트: 기기 기본 한글 폰트를 씁니다.
-  - 추가 다운로드 0KB → 전시장 데이터망에서 QR을 찍자마자 바로 뜹니다.
-  - 아이폰/안드로이드 각자의 기본 서체라 오히려 '흔한 응모 폼'처럼 보입니다.
+  폰트: 지마켓 산스(Gmarket Sans) — 홍보 포스터 제목과 같은 계열의 기하학적 고딕입니다.
+  - 포스터/X배너와 같은 얼굴로 보여야 관람객이 "부스 공식 페이지"로 받아들입니다.
+  - 설치 폰트를 KS X 1001 2350자로 서브셋해 직접 담았습니다(각 ~120KB).
+    CDN을 타지 않으므로 전시장 데이터망이 느려도 페이지와 같이 도착합니다.
+  - swap: 폰트가 늦게 와도 글자는 즉시 기기 기본 서체로 먼저 보입니다.
+  ※ 글자를 추가할 때 주의 — 서브셋은 KS X 1001 2350자까지만 들어 있습니다.
+     그 밖의 희귀 음절(옛한글·특수 기호 등)은 기기 기본 서체로 떨어집니다.
 */
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('./assets/fonts/GmarketSansMedium.subset.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('./assets/fonts/GmarketSansBold.subset.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR',
+    'Gmarket Sans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR',
     'Malgun Gothic', 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -547,4 +567,160 @@ button {
 
 .qr-jolt {
   animation: qr-jolt 0.5s ease-out both;
+}
+
+/* ── [0] 시작 화면 — 홍보 포스터와 같은 얼굴 ─────────────
+   포스터(A4·X배너)의 하늘색 그라디언트 + 보케 + 컨페티 + 금색 아크 +
+   남색 하단 밴드를 CSS로 다시 그렸습니다. 이미지가 아니라 벡터/그라디언트라
+   어떤 화면 비율에서도 깨지지 않고, 추가 다운로드도 없습니다.
+
+   ★ 색은 포스터 원본 픽셀에서 그대로 뽑았습니다.
+       하늘색  #A9D6FD → #8FC4FB
+       남색    #263B7C
+       금색    #FECA36                                        */
+
+:root {
+  --ps-navy: #263b7c;
+  --ps-navy-deep: #1c2e63;
+  --ps-gold: #feca36;
+  --ps-sky-top: #a9d6fd;
+  --ps-sky-mid: #8fc4fb;
+}
+
+.ps-sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(115% 62% at 50% 0%, rgba(214, 238, 255, 0.95) 0%, rgba(214, 238, 255, 0) 62%),
+    linear-gradient(
+      180deg,
+      var(--ps-sky-top) 0%,
+      var(--ps-sky-mid) 38%,
+      #9ccbfa 66%,
+      #8bbdf7 100%
+    );
+}
+
+/* 포스터의 흐릿한 동그라미들 — 뒤에서 은은하게 떠 있습니다 */
+.ps-bokeh {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0));
+  filter: blur(0.5px);
+}
+
+/* 컨페티 조각 — 색종이가 흩날린 자리에서 아주 천천히 흔들립니다 */
+.ps-confetti {
+  position: absolute;
+  border-radius: 2px;
+  will-change: transform;
+  animation: ps-float 7s ease-in-out infinite;
+}
+
+@keyframes ps-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--ps-rot));
+  }
+  50% {
+    transform: translate3d(0, -9px, 0) rotate(calc(var(--ps-rot) + 8deg));
+  }
+}
+
+/* 반짝임 */
+.ps-spark {
+  position: absolute;
+  animation: ps-twinkle 3.4s ease-in-out infinite;
+}
+
+@keyframes ps-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* 제목 — 남색 테두리 + 두꺼운 그림자.
+   paint-order 로 획을 글자 뒤에 깔아야 안쪽이 파먹히지 않습니다.
+   (미지원 브라우저에서는 획이 절반 안쪽으로 들어와 글자가 조금 굵어 보일 뿐,
+    읽는 데는 지장이 없습니다.) */
+.ps-outline {
+  paint-order: stroke fill;
+  -webkit-text-stroke-color: var(--ps-navy);
+  text-stroke-color: var(--ps-navy);
+}
+
+/* 캐릭터가 배경 위에 떠 보이지 않도록 바닥 그림자를 깔아줍니다 */
+.ps-mascot-shadow {
+  filter: drop-shadow(0 14px 12px rgba(30, 60, 120, 0.28));
+}
+
+/* 눌리는 버튼 */
+.ps-cta {
+  box-shadow:
+    0 6px 0 #d9a316,
+    0 14px 24px rgba(24, 44, 96, 0.42);
+  transition:
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+}
+
+.ps-cta:active {
+  transform: translateY(5px);
+  box-shadow:
+    0 1px 0 #d9a316,
+    0 6px 12px rgba(24, 44, 96, 0.4);
+}
+
+/* 손가락 탭 유도 — 버튼이 아주 살짝 숨 쉽니다 */
+@keyframes ps-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.018);
+  }
+}
+
+.ps-breathe {
+  animation: ps-breathe 2.6s ease-in-out infinite;
+}
+
+/* 움직임을 불편해하는 관람객을 위해 — 기기 설정을 따릅니다 */
+@media (prefers-reduced-motion: reduce) {
+  .ps-confetti,
+  .ps-spark,
+  .ps-breathe {
+    animation: none !important;
+  }
+}
+
+/* 캐릭터 크기 — 두 마스코트는 포스터에서 오려낸 그대로라 서로의 크기 비가 이미 맞습니다.
+   그래서 한 변수(--ps-m)로 같이 키우고 줄입니다. 따로 만지면 비율이 깨집니다.
+     세로가 긴 화면에서는 크게, 폭이 좁은 화면에서는 폭에 맞춰 작게.
+     58vw 는 둘을 나란히 놓았을 때 좌우 여백을 넘지 않는 상한입니다. */
+.ps-mascots {
+  --ps-m: clamp(170px, min(34vh, 58vw), 300px);
+}
+
+.ps-mascot-l {
+  height: var(--ps-m);
+  width: auto;
+}
+
+.ps-mascot-r {
+  /* 오른쪽 캐릭터 원본 높이 비율(644/727) — 포스터에서의 크기 차이를 그대로 지킵니다 */
+  height: calc(var(--ps-m) * 0.886);
+  width: auto;
+}
+
+/* 포스터의 남색 리본 — 양 끝이 안쪽으로 깎인 띠 */
+.ps-ribbon {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
 }
