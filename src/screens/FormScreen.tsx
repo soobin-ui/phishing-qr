@@ -3,7 +3,8 @@ import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { form, fields, ui } from '../lib/content'
-import Mascot from '../components/Mascot'
+import PosterBackground from '../components/PosterBackground'
+import mascotLeft from '../assets/mascot-left.webp'
 import { unlockAudio } from '../lib/alarm'
 import { digitsOnly, formatPhone, lines } from '../lib/format'
 import type { Answers, FieldDef } from '../types'
@@ -21,8 +22,13 @@ const fieldRise: Variants = {
 /**
  * [1] 응모 폼.
  *
- * ★ 이 화면은 절대 특별해 보이면 안 됩니다.
- *   흰 배경 / 기본 입력창 / 파란 제출 버튼. 그 이상 꾸미지 마세요.
+ * ★ 머리글만 홍보 포스터의 얼굴을 씁니다(하늘색·캐릭터·금색 아크).
+ *   부스 앞 포스터 → 시작 화면 → 이 화면이 같은 얼굴이라야
+ *   "그 부스가 만든 공식 응모 폼"으로 읽힙니다.
+ *
+ * ★ 대신 입력 영역은 흰 카드 안에 그대로 둡니다.
+ *   하늘색 배경 위에 입력창을 올리면 읽기 어렵고,
+ *   무엇보다 '어디서나 보던 평범한 응모 폼'이라는 느낌이 깨집니다.
  *
  * ★ 입력값은 이 컴포넌트의 useState(메모리)에만 담깁니다.
  *   fetch·localStorage·쿠키·콘솔 출력 어느 것도 쓰지 않습니다.
@@ -59,27 +65,43 @@ export default function FormScreen({ onSubmit }: Props) {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f4f5f7]">
-      <div className="mx-auto w-full max-w-[430px] bg-white min-h-dvh">
-        <header className="border-b border-gray-200 px-5 pt-7 pb-5">
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] text-gray-500">{form.header.eventName}</p>
-              <h1 className="mt-1 text-[22px] leading-snug font-bold text-gray-900">
-                {form.header.title}
-              </h1>
-              <p className="mt-3 text-[16px] leading-relaxed text-gray-600">
-                {lines(form.header.description).map((line, i) => (
-                  <span key={i} className="block">
-                    {line}
-                  </span>
-                ))}
-              </p>
-            </div>
-            <div className="mt-1 shrink-0">
-              <Mascot size={78} />
-            </div>
+    <div className="min-h-dvh bg-[#dbeafd]">
+      <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-white">
+        {/* ── 머리글 — 포스터의 얼굴 ─────────────────── */}
+        <header className="relative overflow-hidden px-5 pt-7 pb-12">
+          <PosterBackground bottom="arc" />
+
+          <div className="relative z-10">
+            <span className="inline-block rounded-full bg-[#263b7c] px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_3px_8px_rgba(24,44,96,0.28)]">
+              {form.intro.badge}
+            </span>
+
+            <h1 className="ps-title-shadow mt-2.5 leading-[1.15] font-bold [--ps-stroke:5px]">
+              <span className="ps-outline block text-[27px] text-[#feca36]">
+                {form.intro.titleAccent}
+              </span>
+              <span className="ps-outline block text-[27px] text-white">
+                {form.intro.titleMain}
+              </span>
+            </h1>
+
+            <p className="mt-3 max-w-[58%] text-[15px] leading-relaxed font-medium text-[#1c2e63]">
+              {lines(form.header.description).map((line, i) => (
+                <span key={i} className="block">
+                  {line}
+                </span>
+              ))}
+            </p>
           </div>
+
+          {/* 캐릭터는 글줄 오른쪽 아래에 작게 — 금색 아크 위에 서 있습니다.
+              ★ 여기는 한 명만 세웁니다. 머리글이 좁아서 둘을 넣으면
+                선물상자끼리 겹쳐 뭉개집니다(둘 다 나오는 곳은 시작 화면과 부스 유도). */}
+          <img
+            src={mascotLeft}
+            alt=""
+            className="ps-mascot-shadow pointer-events-none absolute right-4 bottom-3 z-10 h-[120px] w-auto"
+          />
         </header>
 
         <form onSubmit={handleSubmit} noValidate autoComplete="off" className="px-5 py-6">
@@ -170,14 +192,12 @@ export default function FormScreen({ onSubmit }: Props) {
             </label>
           </div>
 
-          <motion.button
+          <button
             type="submit"
-            className="mt-7 h-14 w-full rounded-md bg-[#1b64da] text-[17px] font-bold text-white active:bg-[#164fb0]"
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            className="ps-cta mt-7 h-[58px] w-full rounded-2xl bg-[#feca36] text-[18px] font-bold text-[#1c2e63]"
           >
             {form.submitButton}
-          </motion.button>
+          </button>
 
           {/* 키보드가 올라온 상태에서도 제출 버튼까지 스크롤이 닿도록 여백을 둡니다 */}
           <div className="h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />

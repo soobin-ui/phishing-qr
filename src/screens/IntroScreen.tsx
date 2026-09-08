@@ -49,21 +49,15 @@ export default function IntroScreen({ onStart }: Props) {
         {/* ── 제목 ────────────────────────────────
             포스터와 같이 금색 + 흰색, 남색 테두리에 두꺼운 그림자를 넣었습니다. */}
         <motion.h1
-          className="mt-4 text-center leading-[1.12] font-bold [filter:drop-shadow(0_4px_0_rgba(28,46,99,0.35))_drop-shadow(0_10px_16px_rgba(24,44,96,0.3))]"
+          className="ps-title-shadow mt-4 text-center leading-[1.12] font-bold"
           initial={{ opacity: 0, scale: 0.9, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.1 }}
         >
-          <span
-            className="ps-outline block text-[clamp(38px,11.2vw,50px)] text-[#feca36]"
-            style={{ WebkitTextStrokeWidth: '7px' }}
-          >
+          <span className="ps-outline block text-[clamp(38px,11.2vw,50px)] text-[#feca36]">
             {form.intro.titleAccent}
           </span>
-          <span
-            className="ps-outline block text-[clamp(38px,11.2vw,50px)] text-white"
-            style={{ WebkitTextStrokeWidth: '7px' }}
-          >
+          <span className="ps-outline block text-[clamp(38px,11.2vw,50px)] text-white">
             {form.intro.titleMain}
           </span>
         </motion.h1>

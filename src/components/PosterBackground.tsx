@@ -43,7 +43,17 @@ const SPARKS = [
   { x: '92%', y: '52%', s: 17, d: '1.2s' },
 ]
 
-export default function PosterBackground() {
+interface Props {
+  /**
+   * 아래쪽 마감.
+   *   band — 금색 아크 + 남색 밴드 (시작 화면·부스 유도처럼 한 화면에 딱 떨어지는 곳)
+   *   arc  — 금색 아크만 (응모 폼 머리글처럼 아래에 흰 카드가 이어붙는 곳)
+   *   none — 하늘만
+   */
+  bottom?: 'band' | 'arc' | 'none'
+}
+
+export default function PosterBackground({ bottom = 'band' }: Props) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <div className="ps-sky" />
@@ -94,20 +104,39 @@ export default function PosterBackground() {
       {/* ── 아래쪽 금색 아크 + 남색 밴드 ────────────────
           포스터 하단을 그대로 옮긴 부분입니다.
           preserveAspectRatio="none" 이라 화면 폭이 달라져도 곡선이 끝까지 붙습니다. */}
-      <svg
-        className="absolute inset-x-0 bottom-0 h-[210px] w-full"
-        viewBox="0 0 430 210"
-        preserveAspectRatio="none"
-      >
-        <path d="M0 78 C118 14 300 6 430 52 L430 210 L0 210 Z" fill="#263b7c" />
-        <path
-          d="M-6 60 C118 -6 302 -14 436 34"
-          fill="none"
-          stroke="#feca36"
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
-      </svg>
+      {bottom === 'band' && (
+        <svg
+          className="absolute inset-x-0 bottom-0 h-[210px] w-full"
+          viewBox="0 0 430 210"
+          preserveAspectRatio="none"
+        >
+          <path d="M0 78 C118 14 300 6 430 52 L430 210 L0 210 Z" fill="#263b7c" />
+          <path
+            d="M-6 60 C118 -6 302 -14 436 34"
+            fill="none"
+            stroke="#feca36"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+
+      {/* 금색 아크만 — 아래에 흰 카드가 이어붙는 자리 */}
+      {bottom === 'arc' && (
+        <svg
+          className="absolute inset-x-0 bottom-0 h-[54px] w-full"
+          viewBox="0 0 430 54"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M-6 40 C118 -4 302 -10 436 26"
+            fill="none"
+            stroke="#feca36"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
     </div>
   )
 }

@@ -648,11 +648,20 @@ button {
 /* 제목 — 남색 테두리 + 두꺼운 그림자.
    paint-order 로 획을 글자 뒤에 깔아야 안쪽이 파먹히지 않습니다.
    (미지원 브라우저에서는 획이 절반 안쪽으로 들어와 글자가 조금 굵어 보일 뿐,
-    읽는 데는 지장이 없습니다.) */
+    읽는 데는 지장이 없습니다.)
+
+   ★ 테두리 두께는 글자 크기에 맞춰 --ps-stroke 로 조절합니다.
+     40px 글자에 7px, 26px 글자에 5px 정도가 포스터와 같은 비율입니다. */
 .ps-outline {
   paint-order: stroke fill;
+  -webkit-text-stroke-width: var(--ps-stroke, 7px);
   -webkit-text-stroke-color: var(--ps-navy);
   text-stroke-color: var(--ps-navy);
+}
+
+/* 제목 덩어리에 거는 두꺼운 그림자 — 글자 하나하나가 아니라 줄 전체에 겁니다 */
+.ps-title-shadow {
+  filter: drop-shadow(0 4px 0 rgba(28, 46, 99, 0.35)) drop-shadow(0 10px 16px rgba(24, 44, 96, 0.3));
 }
 
 /* 캐릭터가 배경 위에 떠 보이지 않도록 바닥 그림자를 깔아줍니다 */
