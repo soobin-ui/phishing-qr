@@ -35,13 +35,38 @@ const BOKEH = [
   { x: '58%', y: '48%', d: 120, o: 0.3 },
 ]
 
+/* 반짝임 — 포스터에 흩뿌려진 별빛.
+   x·y 는 % 숫자입니다(글자 자리를 피하려면 아래 avoidSparks 로 걸러냅니다).
+   o(밝기)와 d(시작 시각)를 서로 다르게 줘야 한꺼번에 깜빡이지 않고
+   여기저기서 따로따로 반짝입니다. */
 const SPARKS = [
-  { x: '16%', y: '13%', s: 20, d: '0s' },
-  { x: '87%', y: '19%', s: 15, d: '0.9s' },
-  { x: '52%', y: '5%', s: 12, d: '1.7s' },
-  { x: '9%', y: '45%', s: 14, d: '2.4s' },
-  { x: '92%', y: '52%', s: 17, d: '1.2s' },
+  { x: 16, y: 13, s: 22, o: 1, d: '0s' },
+  { x: 87, y: 19, s: 15, o: 0.8, d: '0.9s' },
+  { x: 52, y: 5, s: 13, o: 0.7, d: '1.7s' },
+  { x: 9, y: 45, s: 16, o: 0.85, d: '2.4s' },
+  { x: 92, y: 52, s: 18, o: 1, d: '1.2s' },
+  { x: 34, y: 27, s: 11, o: 0.6, d: '0.4s' },
+  { x: 68, y: 11, s: 17, o: 0.9, d: '2.0s' },
+  { x: 5, y: 24, s: 12, o: 0.7, d: '1.4s' },
+  { x: 77, y: 35, s: 13, o: 0.75, d: '2.8s' },
+  { x: 24, y: 58, s: 15, o: 0.8, d: '0.7s' },
+  { x: 60, y: 63, s: 12, o: 0.65, d: '2.2s' },
+  { x: 96, y: 8, s: 14, o: 0.85, d: '3.0s' },
+  { x: 44, y: 44, s: 10, o: 0.55, d: '1.9s' },
+  { x: 82, y: 72, s: 16, o: 0.8, d: '0.2s' },
+  { x: 13, y: 76, s: 12, o: 0.7, d: '2.6s' },
+  { x: 71, y: 88, s: 14, o: 0.75, d: '1.1s' },
+  { x: 30, y: 91, s: 11, o: 0.6, d: '2.9s' },
+  { x: 50, y: 78, s: 13, o: 0.7, d: '0.5s' },
 ]
+
+/** 별빛을 넣지 않을 자리(% 단위 사각형). 글자 위에 겹치면 읽기 어려워집니다. */
+export interface AvoidBox {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
 
 interface Props {
   /**
@@ -51,9 +76,27 @@ interface Props {
    *   none — 하늘만
    */
   bottom?: 'band' | 'arc' | 'none'
+  /**
+   * 색종이 조각.
+   * 응모 폼 머리글처럼 좁은 곳에서는 글자·캐릭터 옆에 달라붙어 거슬리므로 끕니다.
+   */
+  confetti?: boolean
+  /**
+   * 별빛을 비울 자리 — 화면마다 글자가 놓이는 곳이 달라서 화면 쪽에서 알려줍니다.
+   * 여기 겹치는 별빛은 그리지 않습니다.
+   */
+  avoidSparks?: AvoidBox[]
 }
 
-export default function PosterBackground({ bottom = 'band' }: Props) {
+export default function PosterBackground({
+  bottom = 'band',
+  confetti = true,
+  avoidSparks = [],
+}: Props) {
+  const sparks = SPARKS.filter(
+    (p) => !avoidSparks.some((b) => p.x >= b.x1 && p.x <= b.x2 && p.y >= b.y1 && p.y <= b.y2),
+  )
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <div className="ps-sky" />
@@ -66,11 +109,16 @@ export default function PosterBackground({ bottom = 'band' }: Props) {
         />
       ))}
 
-      {SPARKS.map((s, i) => (
+      {sparks.map((s, i) => (
         <svg
           key={`s${i}`}
           className="ps-spark"
-          style={{ left: s.x, top: s.y, animationDelay: s.d }}
+          style={{
+            left: `${s.x}%`,
+            top: `${s.y}%`,
+            animationDelay: s.d,
+            ['--ps-spark-o' as never]: s.o,
+          }}
           width={s.s}
           height={s.s}
           viewBox="0 0 24 24"
@@ -83,23 +131,26 @@ export default function PosterBackground({ bottom = 'band' }: Props) {
         </svg>
       ))}
 
-      {CONFETTI.map((c, i) => (
-        <span
-          key={`c${i}`}
-          className="ps-confetti"
-          style={{
-            left: c.x,
-            top: c.y,
-            width: c.w,
-            height: c.h,
-            background: c.c,
-            // rotate 는 애니메이션이 이어받습니다(index.css의 ps-float)
-            '--ps-rot': `${c.rot}deg`,
-            animationDelay: `${(i % 5) * 0.7}s`,
-            opacity: 0.92,
-          } as React.CSSProperties}
-        />
-      ))}
+      {confetti &&
+        CONFETTI.map((c, i) => (
+          <span
+            key={`c${i}`}
+            className="ps-confetti"
+            style={
+              {
+                left: c.x,
+                top: c.y,
+                width: c.w,
+                height: c.h,
+                background: c.c,
+                // rotate 는 애니메이션이 이어받습니다(index.css의 ps-float)
+                '--ps-rot': `${c.rot}deg`,
+                animationDelay: `${(i % 5) * 0.7}s`,
+                opacity: 0.92,
+              } as React.CSSProperties
+            }
+          />
+        ))}
 
       {/* ── 아래쪽 금색 아크 + 남색 밴드 ────────────────
           포스터 하단을 그대로 옮긴 부분입니다.

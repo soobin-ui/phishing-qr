@@ -630,18 +630,19 @@ button {
 /* 반짝임 */
 .ps-spark {
   position: absolute;
+  /* --ps-spark-o: 별빛마다 다른 최대 밝기(PosterBackground.tsx의 o 값) */
   animation: ps-twinkle 3.4s ease-in-out infinite;
 }
 
 @keyframes ps-twinkle {
   0%,
   100% {
-    opacity: 0.25;
-    transform: scale(0.8);
+    opacity: calc(var(--ps-spark-o, 1) * 0.2);
+    transform: scale(0.78);
   }
   50% {
-    opacity: 1;
-    transform: scale(1.1);
+    opacity: var(--ps-spark-o, 1);
+    transform: scale(1.12);
   }
 }
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { form, fields, ui } from '../lib/content'
 import PosterBackground from '../components/PosterBackground'
+import type { AvoidBox } from '../components/PosterBackground'
 import mascotLeft from '../assets/mascot-left-nogift.webp'
 import mascotRight from '../assets/mascot-right-nogift.webp'
 import { unlockAudio } from '../lib/alarm'
@@ -13,6 +14,9 @@ import type { Answers, FieldDef } from '../types'
 interface Props {
   onSubmit: (answers: Answers) => void
 }
+
+/** 별빛을 비울 자리(% 단위) — 머리글은 글자가 왼쪽에 몰려 있습니다. */
+const SPARK_FREE: AvoidBox[] = [{ x1: 0, y1: 0, x2: 57, y2: 96 }]
 
 /** 입력 항목이 위에서 차례로 내려오는 동작 */
 const fieldRise: Variants = {
@@ -68,41 +72,51 @@ export default function FormScreen({ onSubmit }: Props) {
   return (
     <div className="min-h-dvh bg-[#dbeafd]">
       <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-white">
-        {/* ── 머리글 — 포스터의 얼굴 ─────────────────── */}
-        <header className="relative overflow-hidden px-5 pt-7 pb-12">
-          <PosterBackground bottom="arc" />
+        {/* ── 머리글 — 포스터의 얼굴 ───────────────────
+            행사명 배지가 한 줄, 그 아래 왼쪽은 글자 / 오른쪽은 캐릭터 둘.
+
+            ★ 여기서는 색종이(confetti)도 금색 아크(bottom)도 끕니다 —
+              좁은 머리글에서는 글자 위를 지나가 가려버립니다.
+              색종이와 아크가 살아 있는 곳은 시작 화면과 부스 유도. */}
+        <header className="relative overflow-hidden px-5 pt-7 pb-2">
+          <PosterBackground bottom="none" confetti={false} avoidSparks={SPARK_FREE} />
 
           <div className="relative z-10">
-            <span className="inline-block rounded-full bg-[#263b7c] px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_3px_8px_rgba(24,44,96,0.28)]">
+            <span className="inline-block rounded-full bg-[#263b7c] px-4 py-1.5 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(24,44,96,0.28)]">
               {form.intro.badge}
             </span>
 
-            <h1 className="ps-title-shadow mt-2.5 leading-[1.15] font-bold [--ps-stroke:5px]">
-              <span className="ps-outline block text-[27px] text-[#feca36]">
-                {form.intro.titleAccent}
-              </span>
-              <span className="ps-outline block text-[27px] text-white">
-                {form.intro.titleMain}
-              </span>
-            </h1>
+            <div className="mt-2.5 flex gap-2">
+              {/* 왼쪽 — 글자 */}
+              <div className="min-w-0 flex-1">
+                <h1 className="ps-title-shadow leading-[1.15] font-bold [--ps-stroke:5px]">
+                  <span className="ps-outline block text-[27px] text-[#feca36]">
+                    {form.intro.titleAccent}
+                  </span>
+                  <span className="ps-outline block text-[27px] text-white">
+                    {form.intro.titleMain}
+                  </span>
+                </h1>
 
-            <p className="mt-3 max-w-[52%] text-[15px] leading-relaxed font-medium text-[#1c2e63]">
-              {lines(form.header.description).map((line, i) => (
-                <span key={i} className="block">
-                  {line}
-                </span>
-              ))}
-            </p>
-          </div>
+                <p className="mt-3 text-[clamp(13px,3.8vw,15px)] leading-relaxed font-medium text-[#1c2e63]">
+                  {lines(form.header.description).map((line, i) => (
+                    <span key={i} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </p>
+              </div>
 
-          {/* 캐릭터 둘은 글줄 오른쪽 아래에 작게 — 금색 아크 위에 서 있습니다.
-              ★ 여기서는 발밑 선물상자를 뺀 이미지를 씁니다(-nogift).
-                머리글이 좁아 상자까지 넣으면 둘 사이에서 겹쳐 뭉개집니다.
-                상자가 함께 나오는 곳은 시작 화면과 부스 유도입니다.
-              ★ 두 높이(104 : 90)는 포스터에서의 크기 비입니다. 한쪽만 바꾸지 마세요. */}
-          <div className="pointer-events-none absolute right-3 bottom-3 z-10 flex items-end gap-2">
-            <img src={mascotLeft} alt="" className="ps-mascot-shadow h-[104px] w-auto" />
-            <img src={mascotRight} alt="" className="ps-mascot-shadow h-[90px] w-auto" />
+              {/* 오른쪽 — 캐릭터 둘.
+                  ★ 발밑 선물상자를 뺀 이미지(-nogift)를 씁니다. 좁은 칸이라
+                    상자까지 넣으면 둘 사이에서 겹쳐 뭉개집니다.
+                  ★ 폭 비율(56% : 49%)이 포스터에서의 크기 비입니다. 한쪽만 바꾸지 마세요.
+                    오른쪽 캐릭터를 -ml-2 로 살짝 겹쳐 세워 그만큼 둘 다 크게 넣었습니다. */}
+              <div className="flex w-[46%] shrink-0 items-end justify-end self-end">
+                <img src={mascotLeft} alt="" className="ps-mascot-shadow w-[56%]" />
+                <img src={mascotRight} alt="" className="ps-mascot-shadow -ml-2 w-[49%]" />
+              </div>
+            </div>
           </div>
         </header>
 

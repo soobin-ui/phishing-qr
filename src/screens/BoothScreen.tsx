@@ -3,8 +3,16 @@ import type { Variants } from 'framer-motion'
 import { ui } from '../lib/content'
 import { lines } from '../lib/format'
 import PosterBackground from '../components/PosterBackground'
+import type { AvoidBox } from '../components/PosterBackground'
 import mascotLeft from '../assets/mascot-left.webp'
 import mascotRight from '../assets/mascot-right.webp'
+
+/** 별빛을 비울 자리(% 단위) — 글자 위에 반짝이가 겹치면 읽기 어려워집니다. */
+const SPARK_FREE: AvoidBox[] = [
+  { x1: 5, y1: 0, x2: 95, y2: 20 }, // 질문 두 줄
+  { x1: 13, y1: 24, x2: 87, y2: 42 }, // 리본
+  { x1: 3, y1: 80, x2: 97, y2: 100 }, // 체험존 표지판
+]
 
 /** 아래에서 밀려 올라오며 나타나는 공통 등장 동작 */
 const rise: Variants = {
@@ -26,7 +34,7 @@ export default function BoothScreen() {
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[#8fc4fb]">
-      <PosterBackground />
+      <PosterBackground avoidSparks={SPARK_FREE} />
 
       <motion.div
         className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pt-12 pb-7"

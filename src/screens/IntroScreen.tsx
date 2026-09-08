@@ -3,12 +3,20 @@ import { form } from '../lib/content'
 import { unlockAudio } from '../lib/alarm'
 import { lines } from '../lib/format'
 import PosterBackground from '../components/PosterBackground'
+import type { AvoidBox } from '../components/PosterBackground'
 import mascotLeft from '../assets/mascot-left.webp'
 import mascotRight from '../assets/mascot-right.webp'
 
 interface Props {
   onStart: () => void
 }
+
+/** 별빛을 비울 자리(% 단위) — 글자 위에 반짝이가 겹치면 읽기 어려워집니다. */
+const SPARK_FREE: AvoidBox[] = [
+  { x1: 6, y1: 0, x2: 94, y2: 28 }, // 배지 + 제목
+  { x1: 16, y1: 30, x2: 84, y2: 47 }, // 안내 문구 리본
+  { x1: 3, y1: 82, x2: 97, y2: 100 }, // 응모하기 버튼 + 각주
+]
 
 /**
  * [0] 시작 화면. QR을 찍으면 가장 먼저 뜹니다.
@@ -31,7 +39,7 @@ export default function IntroScreen({ onStart }: Props) {
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[#8fc4fb]">
-      <PosterBackground />
+      <PosterBackground avoidSparks={SPARK_FREE} />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pt-9 pb-7">
         {/* ── 행사명 배지 ─────────────────────────── */}
