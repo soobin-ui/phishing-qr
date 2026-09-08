@@ -85,14 +85,8 @@ await page.evaluate(() => {
   ;[...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '응모하기').click()
 })
 
-// [2] 접수 완료
-await wait(400)
-await shot('complete-spinner')
-await wait(1200)
-await shot('complete-done')
-
-// [3] 경광등 + 전송 로그 — 애니메이션이라 여러 프레임
-await wait(1500)
+// [2] 빨간 화면 — 누르는 즉시 시작합니다. 애니메이션이라 프레임을 여러 장
+await wait(900)
 await shot('alarm-a')
 await wait(700)
 await shot('alarm-b')

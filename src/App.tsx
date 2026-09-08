@@ -1,20 +1,21 @@
 import { useState } from 'react'
 import IntroScreen from './screens/IntroScreen'
 import FormScreen from './screens/FormScreen'
-import CompleteScreen from './screens/CompleteScreen'
 import RevealScreen from './screens/RevealScreen'
 import BoothScreen from './screens/BoothScreen'
 import type { Answers } from './types'
 
-type Step = 'intro' | 'form' | 'complete' | 'reveal' | 'booth'
+type Step = 'intro' | 'form' | 'reveal' | 'booth'
 
 /**
  * 화면 흐름
- *   [0] 시작 화면  — 마스코트 + [응모하기]
+ *   [0] 시작 화면  — 캐릭터 + [응모하기]
  *   [1] 응모 폼
- *   [2] 접수 완료
- *   [3] 빨간 화면
- *   [4] 부스 유도
+ *   [2] 빨간 화면   ← [응모하기]를 누르는 순간 바로 여기로 옵니다
+ *   [3] 부스 유도
+ *
+ * ★ 사이에 "접수 완료" 화면이 있었으나 2026-09-08 삭제했습니다.
+ *   누르자마자 경광등이 터지는 편이 낫다는 판단.
  *
  * ★ answers 는 이 컴포넌트의 메모리에만 존재합니다.
  *   서버 전송·localStorage·쿠키·콘솔 출력 어느 것도 하지 않으며,
@@ -26,10 +27,6 @@ export default function App() {
 
   if (step === 'intro') {
     return <IntroScreen onStart={() => setStep('form')} />
-  }
-
-  if (step === 'complete') {
-    return <CompleteScreen onDone={() => setStep('reveal')} />
   }
 
   if (step === 'reveal') {
@@ -45,7 +42,7 @@ export default function App() {
     <FormScreen
       onSubmit={(a) => {
         setAnswers(a)
-        setStep('complete')
+        setStep('reveal')
       }}
     />
   )
