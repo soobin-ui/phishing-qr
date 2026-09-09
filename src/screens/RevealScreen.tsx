@@ -395,8 +395,20 @@ export default function RevealScreen({ answers, onNext }: Props) {
             </motion.p>
           ))}
 
+          {/* 하루치로 환산한 값 — 큰 숫자는 실감이 안 나므로 하루 단위로 한 번 더 */}
           <motion.p
-            className="mt-6 text-[13px] leading-relaxed text-white/40"
+            className="qr-neon-text mt-5 text-[clamp(18px,5.2vw,22px)] leading-snug font-bold break-keep text-[#ff8a92]"
+            variants={{
+              hidden: { opacity: 0, y: 12 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: 'easeOut' } },
+            }}
+          >
+            {reveal.after.highlight}
+          </motion.p>
+
+          {/* ★ 출처는 지우지 마세요. 공개 전시물에 박히는 숫자입니다. */}
+          <motion.p
+            className="mt-5 text-[clamp(11px,3vw,13px)] leading-relaxed break-keep text-white/40"
             variants={{
               hidden: { opacity: 0 },
               show: { opacity: 1, transition: { duration: 1 } },
