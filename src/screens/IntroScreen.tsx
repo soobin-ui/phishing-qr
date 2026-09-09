@@ -41,7 +41,7 @@ export default function IntroScreen({ onStart }: Props) {
     <div className="relative min-h-dvh overflow-hidden bg-[#8fc4fb]">
       <PosterBackground avoidSparks={SPARK_FREE} />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pt-9 pb-7">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pt-[clamp(18px,4.3vh,36px)] pb-[clamp(12px,3.3vh,28px)]">
         {/* ── 행사명 배지 ─────────────────────────── */}
         <motion.div
           className="flex justify-center"

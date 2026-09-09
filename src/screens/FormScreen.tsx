@@ -94,8 +94,10 @@ export default function FormScreen({ onSubmit }: Props) {
     onSubmit(answers)
   }
 
+  // overflow-x-hidden — [응모하기] 뒤 금색 빛 번짐(blur)이 화면 밖으로 삐져나가
+  // 가로 스크롤이 생기는 것을 막습니다. 장식이라 잘려도 됩니다.
   return (
-    <div className="min-h-dvh bg-[#dbeafd]">
+    <div className="min-h-dvh overflow-x-hidden bg-[#dbeafd]">
       <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-white">
         {/* ── 머리글 — 포스터의 얼굴 ───────────────────
             행사명 배지가 한 줄, 그 아래 왼쪽은 글자 / 오른쪽은 캐릭터 둘.

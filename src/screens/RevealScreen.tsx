@@ -94,14 +94,17 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
-/** 깜빡이는 빨간 네온 삼각형. 이 화면의 상징입니다. */
+/**
+ * 깜빡이는 빨간 네온 삼각형. 이 화면의 상징입니다.
+ * ★ 작은 휴대폰(320x568)에서도 아래 여섯 줄까지 다 들어가야 하므로
+ *   크기를 화면 높이·폭에 함께 묶어 둡니다. 고정 px 로 두면 넘칩니다.
+ */
 function NeonTriangle({ small = false }: { small?: boolean }) {
-  const w = small ? 104 : 150
+  const w = small ? 'min(104px, 12vh, 30vw)' : 'min(150px, 17vh, 40vw)'
   return (
     <svg
       className="qr-neon"
-      width={w}
-      height={(w * 132) / 150}
+      style={{ width: w, height: `calc(${w} * 132 / 150)` }}
       viewBox="0 0 150 132"
       aria-hidden="true"
     >
@@ -211,11 +214,11 @@ export default function RevealScreen({ answers, onNext }: Props) {
         <div className="flex w-full max-w-[400px] flex-col items-center text-center">
           <NeonTriangle />
 
-          <span className="qr-neon qr-neon-tag mt-4 px-4 py-1 text-[clamp(20px,5.6vw,25px)] font-bold tracking-[0.14em]">
+          <span className="qr-neon qr-neon-tag mt-[clamp(10px,2vh,16px)] px-3.5 py-0.5 text-[clamp(17px,4.8vw,25px)] font-bold tracking-[0.14em]">
             {reveal.alarm.badge}
           </span>
 
-          <h2 className="qr-neon-text mt-3 text-[clamp(33px,9.4vw,44px)] leading-[1.06] font-bold tracking-tight text-white">
+          <h2 className="qr-neon-text mt-[clamp(8px,1.6vh,12px)] text-[clamp(26px,8vw,44px)] leading-[1.06] font-bold tracking-tight text-white">
             {reveal.alarm.titleLines.map((line, i) => (
               <span key={i} className="block">
                 {line}
@@ -224,20 +227,20 @@ export default function RevealScreen({ answers, onNext }: Props) {
           </h2>
 
           {/* 적은 값 — 가운데 정렬, 한 줄씩 */}
-          <div className="mt-6 w-full">
+          <div className="mt-[clamp(14px,3vh,24px)] w-full">
             {cards.map((card, i) => {
               // 아직 차례가 오지 않은 줄은 라벨도 감춥니다 — 몇 개나 더 남았는지
               // 미리 알려주지 않는 쪽이 조입니다.
               const started = cursorLine === -1 || i <= cursorLine
               return (
-                <div key={card.id} className="mb-2.5">
+                <div key={card.id} className="mb-[clamp(6px,1.2vh,10px)]">
                   <p
-                    className="text-[11px] tracking-[0.24em] text-[#ff6a76] transition-opacity duration-300"
+                    className="text-[clamp(10px,2.8vw,11px)] tracking-[0.24em] text-[#ff6a76] transition-opacity duration-300"
                     style={{ opacity: started ? 1 : 0 }}
                   >
                     {card.label}
                   </p>
-                  <p className="qr-neon-text min-h-[1.25em] text-[clamp(20px,6vw,25px)] leading-[1.25] font-bold break-all text-white">
+                  <p className="qr-neon-text min-h-[1.25em] text-[clamp(17px,5.4vw,25px)] leading-[1.25] font-bold break-all text-white">
                     {card.value.slice(0, typed[i] ?? 0)}
                     {i === cursorLine && <span className="qr-caret">|</span>}
                   </p>
@@ -471,17 +474,23 @@ function PoliceBar() {
  * 화면 한 겹. 겹쳐 놓고 투명도만 바꿔서 교차시킵니다(빈 화면이 한 프레임도 안 생기게).
  * AnimatePresence 의 exit 는 React 19 + framer-motion 12 조합에서
  * 전환이 끝나지 않고 화면이 멈추는 경우가 있어 쓰지 않습니다.
+ *
+ * ★ 바깥이 스크롤, 안이 가운데 정렬입니다. 한 겹으로 합치면 안 됩니다 —
+ *   justify-center 를 스크롤 상자에 직접 걸면 내용이 길어졌을 때 위쪽이
+ *   스크롤로 닿지 않습니다. 휴대폰을 가로로 눕히면 실제로 그렇게 됩니다.
  */
 function Layer({ active, children }: { active: boolean; children: ReactNode }) {
   return (
     <motion.div
-      className="absolute inset-0 flex flex-col justify-center px-5"
+      className="absolute inset-0 overflow-y-auto overscroll-contain"
       style={{ pointerEvents: active ? 'auto' : 'none' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: active ? 1 : 0 }}
       transition={{ duration: 0.35 }}
     >
-      {children}
+      <div className="flex min-h-full flex-col items-center justify-center px-5 py-[clamp(12px,2.5vh,24px)]">
+        {children}
+      </div>
     </motion.div>
   )
 }

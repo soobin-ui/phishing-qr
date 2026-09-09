@@ -40,6 +40,8 @@ body,
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* 기기 다크모드와 무관하게 항상 같은 색으로 — index.html 의 meta 와 한 쌍입니다 */
+  color-scheme: light;
 }
 
 body {
@@ -701,7 +703,7 @@ button {
      세로가 긴 화면에서는 크게, 폭이 좁은 화면에서는 폭에 맞춰 작게.
      58vw 는 둘을 나란히 놓았을 때 좌우 여백을 넘지 않는 상한입니다. */
 .ps-mascots {
-  --ps-m: clamp(170px, min(34vh, 58vw), 300px);
+  --ps-m: clamp(140px, min(31vh, 58vw), 300px);
 }
 
 .ps-mascot-l {
