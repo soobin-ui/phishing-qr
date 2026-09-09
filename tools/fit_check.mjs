@@ -138,8 +138,23 @@ for (const [label, w, h] of DEVICES) {
   await wait(150)
   await clickByText('응모하기')
 
-  // [2] 유출 기록 — 다 찍힌 뒤가 가장 깁니다
-  await page.waitForFunction(() => !document.querySelector('.qr-caret'), { timeout: 30000 })
+  // [2] 전송 중
+  await page.waitForFunction(() => !!document.querySelector('[data-role="sending"]'), {
+    timeout: 10000,
+  })
+  await wait(400)
+  await measure('전송중')
+
+  // [3] 유출 기록 — 다 찍힌 뒤가 가장 깁니다
+  // ★ 전송 중 화면에는 커서가 없습니다. 커서 없음만 보면 그 화면을 유출 기록으로
+  //   착각하므로, 유출 기록이 실제로 떴는지 먼저 확인하고 나서 다 찍혔는지를 봅니다.
+  await page.waitForFunction(
+    () => {
+      const r = document.querySelector('[data-role="leak-record"]')
+      return !!r && r.offsetParent !== null && !document.querySelector('.qr-caret')
+    },
+    { timeout: 30000 },
+  )
   await measure('유출기록')
 
   // [3] 문구

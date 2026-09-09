@@ -866,3 +866,29 @@ button {
     animation: none !important;
   }
 }
+
+/* ── 전송 중 화면의 차오르는 막대 ────────────────────
+   시간은 SendingScreen 이 ui.json 의 holdMs 를 그대로 넘겨줍니다. */
+@keyframes qr-sending-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.qr-sending-bar {
+  width: 0%;
+  animation-name: qr-sending-bar;
+  animation-timing-function: cubic-bezier(0.35, 0.6, 0.5, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 움직임을 불편해하는 관람객 — 막대는 채워 둔 채로 둡니다(진행은 그대로 됩니다) */
+@media (prefers-reduced-motion: reduce) {
+  .qr-sending-bar {
+    width: 100%;
+    animation: none !important;
+  }
+}

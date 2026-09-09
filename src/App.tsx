@@ -1,21 +1,23 @@
 import { useState } from 'react'
 import IntroScreen from './screens/IntroScreen'
 import FormScreen from './screens/FormScreen'
+import SendingScreen from './screens/SendingScreen'
 import RevealScreen from './screens/RevealScreen'
 import BoothScreen from './screens/BoothScreen'
 import type { Answers } from './types'
 
-type Step = 'intro' | 'form' | 'reveal' | 'booth'
+type Step = 'intro' | 'form' | 'sending' | 'reveal' | 'booth'
 
 /**
  * 화면 흐름
  *   [0] 시작 화면  — 캐릭터 + [응모하기]
  *   [1] 응모 폼
- *   [2] 빨간 화면   ← [응모하기]를 누르는 순간 바로 여기로 옵니다
- *   [3] 부스 유도
+ *   [2] 전송 중    — 흔한 응모 폼처럼 보이는 1.8초
+ *   [3] 빨간 화면
+ *   [4] 부스 유도
  *
- * ★ 사이에 "접수 완료" 화면이 있었으나 2026-09-08 삭제했습니다.
- *   누르자마자 경광등이 터지는 편이 낫다는 판단.
+ * ★ [2]에 "접수 완료 / 당첨자 발표" 화면이 있었으나 2026-09-08 삭제했습니다.
+ *   안심시키는 말 없이 '전송 중'까지만 두는 것이 지금 형태입니다.
  *
  * ★ answers 는 이 컴포넌트의 메모리에만 존재합니다.
  *   서버 전송·localStorage·쿠키·콘솔 출력 어느 것도 하지 않으며,
@@ -27,6 +29,10 @@ export default function App() {
 
   if (step === 'intro') {
     return <IntroScreen onStart={() => setStep('form')} />
+  }
+
+  if (step === 'sending') {
+    return <SendingScreen onDone={() => setStep('reveal')} />
   }
 
   if (step === 'reveal') {
@@ -42,7 +48,7 @@ export default function App() {
     <FormScreen
       onSubmit={(a) => {
         setAnswers(a)
-        setStep('reveal')
+        setStep('sending')
       }}
     />
   )

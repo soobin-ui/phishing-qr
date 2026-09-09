@@ -211,7 +211,10 @@ export default function RevealScreen({ answers, onNext }: Props) {
           참가자가 방금 적은 값이 한 글자씩 찍힙니다.
           "내가 적은 그 글자"가 눈앞에서 타이핑되는 것이 이 화면의 전부입니다. */}
       <Layer active={stage === 'alarm'}>
-        <div className="flex w-full max-w-[400px] flex-col items-center text-center">
+        <div
+          className="flex w-full max-w-[400px] flex-col items-center text-center"
+          data-role="leak-record"
+        >
           <NeonTriangle />
 
           <span className="qr-neon qr-neon-tag mt-[clamp(10px,2vh,16px)] px-3.5 py-0.5 text-[clamp(17px,4.8vw,25px)] font-bold tracking-[0.14em]">

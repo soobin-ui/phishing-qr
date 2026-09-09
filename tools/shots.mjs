@@ -85,8 +85,12 @@ await page.evaluate(() => {
   ;[...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '응모하기').click()
 })
 
-// [2] 빨간 화면 — 누르는 즉시 시작합니다. 값이 한 글자씩 찍히는 중
-await wait(900)
+// [2] 전송 중 — 흔한 응모 폼처럼 보이는 1.8초
+await wait(700)
+await shot('sending')
+
+// [3] 빨간 화면 — 값이 한 글자씩 찍히는 중
+await wait(1800)
 await shot('leak-typing')
 await wait(1400)
 await shot('leak-typing2')
