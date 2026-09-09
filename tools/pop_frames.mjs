@@ -18,6 +18,22 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), 'shots')
 mkdirSync(OUT, { recursive: true })
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/** 그 버튼이 실제로 화면에 켜질 때까지 기다렸다가 누릅니다.
+ *  ★ 버튼들은 레이어를 겹쳐 두는 구조라 처음부터 DOM 에 있습니다.
+ *    waitForSelector 로는 즉시 통과되어 화면을 건너뜁니다. */
+const clickWhenVisible = (page, role) =>
+  page
+    .waitForFunction(
+      (r) => {
+        const b = document.querySelector(`[data-role="${r}"]`)
+        return !!b && getComputedStyle(b).pointerEvents !== 'none'
+      },
+      { timeout: 30000 },
+      role,
+    )
+    .then(() => page.evaluate((r) => document.querySelector(`[data-role="${r}"]`).click(), role))
+
+
 const browser = await puppeteer.launch({
   executablePath: CHROME,
   headless: true,
@@ -55,23 +71,10 @@ await page.evaluate(() => {
   set('birth', '19960314')
 })
 await clickByText('응모하기')
-await page.waitForFunction(
-    () => {
-      const b = document.querySelector('[data-role="punch-next"]')
-      return !!b && getComputedStyle(b).pointerEvents !== 'none'
-    },
-    { timeout: 25000 },
-  )
-await page.evaluate(() => document.querySelector('[data-role="punch-next"]').click())
-await wait(1400)
-await page.evaluate(() => {
-  const s = document.querySelector('.snap-y')
-  s.scrollTo({ top: s.clientHeight, behavior: 'auto' })
-})
-await wait(900)
-await page.evaluate(() =>
-  document.querySelector('.snap-y').children[1].querySelector('button').click(),
-)
+// [2] 문구 → [3] 질문 → [4] 마지막 한 마디. 이제 전부 [다음] 버튼입니다.
+await clickWhenVisible(page, 'punch-next')
+await clickWhenVisible(page, 'question-next')
+await clickWhenVisible(page, 'after-next')
 await wait(1500)
 
 // 한 주기(1.05초)보다 촘촘하게 — 쉬는 구간이 있으면 여기서 드러납니다

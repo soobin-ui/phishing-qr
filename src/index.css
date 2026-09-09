@@ -498,23 +498,6 @@ button {
   animation: qr-lit var(--qr-half) ease-in-out infinite;
 }
 
-/* ── 아래로 밀라는 신호 ─────────────────────────────── */
-@keyframes qr-cue {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.75;
-  }
-  50% {
-    transform: translateY(9px);
-    opacity: 1;
-  }
-}
-
-.qr-cue {
-  animation: qr-cue 1.4s ease-in-out infinite;
-}
-
 /* ── 시네마틱 마감 ──────────────────────────────────
    가장자리를 눌러 화면 가운데로 시선을 모으고,
    아주 옅은 필름 그레인으로 CG 티를 뺍니다. 둘 다 움직이지 않습니다. */

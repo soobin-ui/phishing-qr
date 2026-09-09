@@ -9,6 +9,7 @@ import mascotLeft from '../assets/mascot-left-nogift.webp'
 import mascotRight from '../assets/mascot-right-nogift.webp'
 import { unlockAudio } from '../lib/alarm'
 import { digitsOnly, formatPhone, lines } from '../lib/format'
+import { checkAll, checkField } from '../lib/validate'
 import type { Answers, FieldDef } from '../types'
 
 interface Props {
@@ -40,24 +41,32 @@ const fieldRise: Variants = {
  */
 export default function FormScreen({ onSubmit }: Props) {
   const [answers, setAnswers] = useState<Answers>({})
-  /** 비워 둔 채 제출을 눌렀던 필수 항목 — 팝업을 닫아도 빨간 테두리로 남습니다 */
-  const [missing, setMissing] = useState<string[]>([])
+  /**
+   * 제출을 눌렀을 때 문제가 있던 항목 — 팝업을 닫아도 빨간 테두리와 안내가 남습니다.
+   * { 항목id: 안내문구 }
+   */
+  const [problems, setProblems] = useState<Record<string, string>>({})
   const [popupOpen, setPopupOpen] = useState(false)
+  /** 형식이 틀린 게 섞여 있으면 팝업 제목이 달라집니다 */
+  const [hasInvalid, setHasInvalid] = useState(false)
 
   const setValue = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
-    // 적기 시작하면 그 항목의 빨간 테두리는 바로 풀어줍니다
-    setMissing((prev) => (prev.includes(id) && value.trim() !== '' ? prev.filter((x) => x !== id) : prev))
+    // 고쳐서 통과되는 순간 그 항목의 빨간 테두리와 안내를 바로 거둡니다
+    setProblems((prev) => {
+      if (!(id in prev)) return prev
+      const def = fields.find((f) => f.id === id)
+      if (!def || checkField(def, value)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
   }
 
-  /** 아직 비어 있는 필수 항목 */
-  const emptyRequired = () =>
-    fields.filter((f) => f.required && (answers[f.id] ?? '').trim() === '')
-
-  /** 팝업을 닫으면 안 적은 첫 칸으로 데려다 놓습니다 */
+  /** 팝업을 닫으면 문제가 있는 첫 칸으로 데려다 놓습니다 */
   const closePopup = () => {
     setPopupOpen(false)
-    const first = missing[0]
+    const first = fields.find((f) => f.id in problems)?.id
     if (!first) return
     const el = document.getElementById(first)
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -69,11 +78,11 @@ export default function FormScreen({ onSubmit }: Props) {
     // ★ 절대 원칙: 어떤 경우에도 폼이 실제로 전송되지 않게 막습니다.
     e.preventDefault()
 
-    // 이름·휴대폰·생년월일은 비워 두면 넘어가지 못합니다(form.json 의 required).
-    // 값이 맞는지는 보지 않습니다 — 아무 글자나 적어도 통과입니다.
-    const empty = emptyRequired()
-    if (empty.length > 0) {
-      setMissing(empty.map((f) => f.id))
+    // 비었는지 + 형식이 맞는지 둘 다 봅니다(규칙은 form.json 의 rule, 검사는 lib/validate.ts).
+    const found = checkAll(fields, answers)
+    if (found.length > 0) {
+      setProblems(Object.fromEntries(found.map(({ def, message }) => [def.id, message])))
+      setHasInvalid(found.some(({ def }) => (answers[def.id] ?? '').trim() !== ''))
       setPopupOpen(true)
       return
     }
@@ -150,7 +159,7 @@ export default function FormScreen({ onSubmit }: Props) {
                 <Field
                   def={def}
                   value={answers[def.id] ?? ''}
-                  invalid={missing.includes(def.id)}
+                  problem={problems[def.id]}
                   onChange={(v) => setValue(def.id, v)}
                 />
               </motion.div>
@@ -204,7 +213,7 @@ export default function FormScreen({ onSubmit }: Props) {
             transition={{ type: 'spring', stiffness: 380, damping: 26 }}
           >
             <p id="required-popup-title" className="text-[18px] leading-snug break-keep font-bold text-gray-900">
-              {form.requiredPopup.title}
+              {hasInvalid ? form.requiredPopup.invalidTitle : form.requiredPopup.title}
             </p>
             <p className="mt-2.5 text-[15px] leading-relaxed break-keep text-gray-600">
               {lines(form.requiredPopup.body).map((line, i) => (
@@ -214,14 +223,19 @@ export default function FormScreen({ onSubmit }: Props) {
               ))}
             </p>
 
-            {/* 무엇을 안 적었는지 그대로 보여줍니다 */}
-            <ul className="mt-4 space-y-1.5 rounded-xl bg-gray-50 px-4 py-3 text-left">
+            {/* 어느 항목이 왜 걸렸는지 그대로 보여줍니다 */}
+            <ul className="mt-4 space-y-2.5 rounded-xl bg-gray-50 px-4 py-3.5 text-left">
               {fields
-                .filter((f) => missing.includes(f.id))
+                .filter((f) => f.id in problems)
                 .map((f) => (
-                  <li key={f.id} className="text-[15px] font-medium text-gray-800">
-                    <span className="mr-1.5 text-[#e0342b]">*</span>
-                    {f.label}
+                  <li key={f.id}>
+                    <p className="text-[15px] font-bold text-gray-800">
+                      <span className="mr-1.5 text-[#e0342b]">*</span>
+                      {f.label}
+                    </p>
+                    <p className="mt-0.5 pl-4 text-[14px] leading-snug break-keep text-gray-500">
+                      {problems[f.id]}
+                    </p>
                   </li>
                 ))}
             </ul>
@@ -256,16 +270,16 @@ const caret =
 function Field({
   def,
   value,
-  invalid,
+  problem,
   onChange,
 }: {
   def: FieldDef
   value: string
-  /** 비워 둔 채 제출을 눌렀던 필수 항목 — 테두리를 빨갛게 */
-  invalid: boolean
+  /** 제출할 때 걸린 사유. 있으면 테두리를 빨갛게 하고 칸 아래에 그대로 적어줍니다 */
+  problem?: string
   onChange: (value: string) => void
 }) {
-  const box = invalid ? `${inputClass} ${invalidClass}` : inputClass
+  const box = problem ? `${inputClass} ${invalidClass}` : inputClass
 
   return (
     <div>
@@ -322,6 +336,10 @@ function Field({
             else onChange(raw)
           }}
         />
+      )}
+
+      {problem && (
+        <p className="mt-1.5 text-[14px] leading-snug break-keep text-[#e0342b]">{problem}</p>
       )}
     </div>
   )

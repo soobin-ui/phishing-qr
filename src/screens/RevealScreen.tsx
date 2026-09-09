@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { reveal } from '../lib/content'
 import { buildCards, buzz } from '../lib/reveal'
 import { startAlarm } from '../lib/alarm'
@@ -18,7 +18,7 @@ interface Props {
  *   2) 큰 글씨 한 방
  *   3) 사이렌 이모지가 반짝이며 질문 하나
  */
-type Stage = 'alarm' | 'punch' | 'question'
+type Stage = 'alarm' | 'punch' | 'question' | 'after'
 
 // 1·2단계(유출 기록·마지막 문구)와 경광봉 화면 모두 검은 바탕입니다
 const NIGHT = '#05060a'
@@ -142,22 +142,6 @@ export default function RevealScreen({ answers, onNext }: Props) {
     [rows, reduced],
   )
 
-
-  // 아래로 미는 동안 화면 요소가 같이 따라 움직입니다.
-  // 경광봉과 글씨의 이동 속도를 다르게 줘서 깊이감이 생깁니다.
-  //
-  // ⚠️ 입력 범위는 반드시 0 에서 시작해 1 로 끝나야 합니다.
-  //    [0, 0.55] 처럼 중간에서 끊으면 값이 갱신되지 않아 글자가 통째로 사라집니다.
-  //    중간을 조절하고 싶으면 아래처럼 정거장을 더 찍으세요.
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ container: scrollRef })
-  const barY = useTransform(scrollYProgress, [0, 1], [0, -60])
-  const questionY = useTransform(scrollYProgress, [0, 1], [0, -95])
-  // 완전히 사라지지 않습니다 — 화면 밖으로 밀려나는 것만으로 충분합니다
-  const leavingOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [1, 0.7, 0.4])
-  const cueOpacity = useTransform(scrollYProgress, [0, 0.25, 1], [1, 0, 0])
-  const afterY = useTransform(scrollYProgress, [0, 1], [70, 0])
-  const afterOpacity = useTransform(scrollYProgress, [0, 0.15, 0.55, 1], [0, 0.15, 1, 1])
 
   // 이름을 적었으면 이름을 부르고, 아니면 이름 없는 판을 씁니다
   const name = (answers.name ?? '').trim()
@@ -325,118 +309,114 @@ export default function RevealScreen({ answers, onNext }: Props) {
       </Layer>
 
       {/* 램프가 정면을 볼 때 화면 전체가 물듭니다 */}
-      {stage === 'question' && (
+      {(stage === 'question' || stage === 'after') && (
         <div className="qr-screenflash">
           <div className="qr-screenflash-red" />
           <div className="qr-screenflash-blue" />
         </div>
       )}
 
-      {/* ── 3·4단계 · 경광등 + 질문 → 아래로 밀면 마지막 한 마디 ── */}
-      <motion.div
-        className="absolute inset-0"
-        style={{ pointerEvents: stage === 'question' ? 'auto' : 'none' }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: stage === 'question' ? 1 : 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        {/* 한 화면씩 딱딱 걸리도록 스냅을 겁니다 — 중간에 어정쩡하게 멈추지 않게 */}
-        <div
-          ref={scrollRef}
-          className="h-full snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-contain"
-        >
-          <section className="relative flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
-            {/* 스크롤하면 경광봉과 글씨가 서로 다른 속도로 따라 올라갑니다 */}
-            <motion.div style={{ y: barY, opacity: leavingOpacity }}>
-              <PoliceBar />
-            </motion.div>
+      {/* ── 3단계 · 경광봉 + 질문 ────────────────────
+          ★ 예전에는 아래로 밀어서 넘어갔습니다. 미는 걸 모르고 서 있는
+            관람객이 있어 앞 화면과 똑같이 [다음] 버튼으로 바꿨습니다. */}
+      <Layer active={stage === 'question'}>
+        <div className="flex w-full max-w-[400px] flex-col items-center">
+          <PoliceBar />
 
-            {/* 한 줄씩 밀려 올라오고, 그 뒤로는 경광봉 불빛을 받아 밝아졌다 어두워집니다 */}
-            <motion.div
-              className="mt-12 w-full max-w-[400px] px-1 text-center"
-              style={{ y: questionY, opacity: leavingOpacity }}
-            >
-              <motion.div
-                initial="hidden"
-                animate={stage === 'question' ? 'show' : 'hidden'}
+          <motion.div
+            className="mt-12 w-full px-1 text-center"
+            initial="hidden"
+            animate={stage === 'question' ? 'show' : 'hidden'}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.28, delayChildren: 0.6 } } }}
+          >
+            {reveal.question.lines.map((line, i) => (
+              <motion.p
+                key={i}
+                className="qr-lit text-[clamp(23px,6.8vw,28px)] leading-[1.34] font-bold tracking-tight break-keep text-white"
                 variants={{
-                  hidden: {},
-                  show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+                  hidden: { opacity: 0, y: 18 },
+                  show: { opacity: 1, y: 0, transition: { duration: 0.9, ease: 'easeOut' } },
                 }}
               >
-                {reveal.question.lines.map((line, i) => (
-                  <motion.p
-                    key={i}
-                    className="qr-lit text-[28px] leading-[1.32] font-black tracking-tight text-white"
-                    variants={{
-                      hidden: { opacity: 0, y: 22 },
-                      show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
-                    }}
-                  >
-                    {line}
-                  </motion.p>
-                ))}
-              </motion.div>
-            </motion.div>
+                {line}
+              </motion.p>
+            ))}
 
-            <motion.div style={{ opacity: cueOpacity }}>
-              <ScrollCue label={reveal.question.scrollCue} />
-            </motion.div>
-          </section>
-
-          <section className="flex h-full snap-start flex-col items-center justify-center overflow-hidden px-5">
-            {/* 미는 만큼 아래에서 올라오면서 진해집니다 */}
-            <motion.div
-              className="w-full max-w-[400px] px-1 text-center"
-              style={{ y: afterY, opacity: afterOpacity }}
+            <motion.button
+              onClick={() => setStage('after')}
+              data-role="question-next"
+              className="mt-10 h-14 w-full rounded-sm border border-white/45 text-[17px] font-bold text-white active:bg-white/10"
+              whileTap={{ scale: 0.97 }}
+              variants={{
+                hidden: { opacity: 0, y: 14 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+              }}
             >
-              <p className="mb-6 text-[19px] leading-relaxed text-white/70">
-                {reveal.after.lead}
-              </p>
-              {reveal.after.lines.map((line, i) => (
-                <p
-                  key={i}
-                  className="text-[27px] leading-[1.32] font-black tracking-tight text-white"
-                >
-                  {line}
-                </p>
-              ))}
-              <p className="mt-6 text-[13px] leading-relaxed text-white/40">
-                {reveal.after.source}
-              </p>
-              <button
-                onClick={onNext}
-                className="mt-10 h-14 w-full border border-white/40 text-[17px] font-bold text-white active:bg-white/10"
-              >
-                {reveal.after.nextButton}
-              </button>
-            </motion.div>
-          </section>
+              {reveal.question.nextButton}
+            </motion.button>
+          </motion.div>
         </div>
-      </motion.div>
+      </Layer>
+
+      {/* ── 4단계 · 마지막 한 마디 ──────────────────── */}
+      <Layer active={stage === 'after'}>
+        <motion.div
+          className="w-full max-w-[400px] px-1 text-center"
+          initial="hidden"
+          animate={stage === 'after' ? 'show' : 'hidden'}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.3, delayChildren: 0.35 } } }}
+        >
+          <motion.p
+            className="mb-6 text-[18px] leading-relaxed text-white/70"
+            variants={{
+              hidden: { opacity: 0, y: 14 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.9, ease: 'easeOut' } },
+            }}
+          >
+            {reveal.after.lead}
+          </motion.p>
+
+          {reveal.after.lines.map((line, i) => (
+            <motion.p
+              key={i}
+              className="text-[clamp(23px,6.8vw,27px)] leading-[1.32] font-bold tracking-tight break-keep text-white"
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: 'easeOut' } },
+              }}
+            >
+              {line}
+            </motion.p>
+          ))}
+
+          <motion.p
+            className="mt-6 text-[13px] leading-relaxed text-white/40"
+            variants={{
+              hidden: { opacity: 0 },
+              show: { opacity: 1, transition: { duration: 1 } },
+            }}
+          >
+            {reveal.after.source}
+          </motion.p>
+
+          <motion.button
+            onClick={onNext}
+            data-role="after-next"
+            className="mt-10 h-14 w-full border border-white/40 text-[17px] font-bold text-white active:bg-white/10"
+            whileTap={{ scale: 0.97 }}
+            variants={{
+              hidden: { opacity: 0, y: 14 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+            }}
+          >
+            {reveal.after.nextButton}
+          </motion.button>
+        </motion.div>
+      </Layer>
 
       {/* 시네마틱 마감 — 가장자리를 눌러 가운데로 시선을 모으고, 옅은 그레인으로 CG 티를 뺍니다 */}
       <div className="qr-vignette" />
       <div className="qr-grain" />
-    </div>
-  )
-}
-
-/** 아래로 밀라는 신호. 못 보고 서 있는 관람객이 생기면 안 되니 계속 움직입니다. */
-function ScrollCue({ label }: { label: string }) {
-  return (
-    <div className="qr-cue pointer-events-none absolute inset-x-0 bottom-8 flex flex-col items-center gap-1 text-white/80">
-      <span className="text-[16px] font-bold">{label}</span>
-      <svg width="26" height="16" viewBox="0 0 26 16" aria-hidden="true">
-        <path
-          d="M3 3l10 10L23 3"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
     </div>
   )
 }
