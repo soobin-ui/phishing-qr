@@ -433,7 +433,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
               ★ 이 두 줄이 이 화면의 전부입니다. 숫자만 두면 남의 통계로 끝납니다.
                 방금 본인이 적어 넘긴 그 줄 수를 그대로 되돌려줍니다. */}
           <motion.p
-            className="mt-7 text-[clamp(17px,4.9vw,21px)] leading-[1.45] font-bold break-keep text-white"
+            className="mt-7 text-[clamp(22px,6.4vw,28px)] leading-[1.4] font-bold break-keep text-white"
             variants={{
               hidden: { opacity: 0, y: 14 },
               show: { opacity: 1, y: 0, transition: { duration: 1.1, ease: 'easeOut' } },
