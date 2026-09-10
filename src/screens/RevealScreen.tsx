@@ -373,7 +373,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.3, delayChildren: 0.35 } } }}
         >
           <motion.p
-            className="mb-6 text-[18px] leading-relaxed text-white/70"
+            className="mb-3 text-[clamp(14px,4vw,17px)] leading-relaxed tracking-[0.06em] break-keep text-white/60"
             variants={{
               hidden: { opacity: 0, y: 14 },
               show: { opacity: 1, y: 0, transition: { duration: 0.9, ease: 'easeOut' } },
@@ -395,15 +395,32 @@ export default function RevealScreen({ answers, onNext }: Props) {
             </motion.p>
           ))}
 
-          {/* 하루치로 환산한 값 — 큰 숫자는 실감이 안 나므로 하루 단위로 한 번 더 */}
+          {/* 빈도 — 1조라는 숫자는 실감이 안 납니다. 사람이 셀 수 있는 단위로 한 번 더 */}
           <motion.p
-            className="qr-neon-text mt-5 text-[clamp(18px,5.2vw,22px)] leading-snug font-bold break-keep text-[#ff8a92]"
+            className="qr-neon-text mt-4 text-[clamp(17px,4.9vw,21px)] leading-snug font-bold break-keep text-[#ff8a92]"
             variants={{
               hidden: { opacity: 0, y: 12 },
               show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: 'easeOut' } },
             }}
           >
             {reveal.after.highlight}
+          </motion.p>
+
+          {/* ── 나에게로 ──────────────────────────────
+              ★ 이 두 줄이 이 화면의 전부입니다. 숫자만 두면 남의 통계로 끝납니다.
+                방금 본인이 적어 넘긴 그 줄 수를 그대로 되돌려줍니다. */}
+          <motion.p
+            className="mt-7 text-[clamp(17px,4.9vw,21px)] leading-[1.45] font-bold break-keep text-white"
+            variants={{
+              hidden: { opacity: 0, y: 14 },
+              show: { opacity: 1, y: 0, transition: { duration: 1.1, ease: 'easeOut' } },
+            }}
+          >
+            {reveal.after.closing.map((line, i) => (
+              <span key={i} className="block">
+                {fill(line, { count: cards.length })}
+              </span>
+            ))}
           </motion.p>
 
           {/* ★ 출처는 지우지 마세요. 공개 전시물에 박히는 숫자입니다. */}
