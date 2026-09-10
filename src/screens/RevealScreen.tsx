@@ -14,7 +14,9 @@ interface Props {
 
 /**
  * [3] 빨간 화면. 세 박자.
- *   1) 경광등 + 사이렌 + 적은 값이 한 줄씩 '전송'된다
+ *   1) 순차 등장 — ! 가 가운데서 크게 깜빡 → 밑에 [경고] → 둘이 위로 올라가며
+ *      '개인정보 유출'이 한 글자씩(셋이 같이 깜빡) → 한 칸 더 올라가며 적은 값이 주르륵
+ *      → 이메일 밑 [다음]. 눌러야 다음으로 넘어갑니다.
  *   2) 큰 글씨 한 방
  *   3) 사이렌 이모지가 반짝이며 질문 하나
  */
@@ -22,64 +24,6 @@ type Stage = 'alarm' | 'punch' | 'question' | 'after'
 
 // 1·2단계(유출 기록·마지막 문구)와 경광봉 화면 모두 검은 바탕입니다
 const NIGHT = '#05060a'
-
-/**
- * 한 줄씩 타자기처럼 찍습니다.
- * 되돌려주는 값은 줄마다 '지금까지 찍힌 글자 수'입니다.
- *
- * ★ 이 화면에서만 JS 로 애니메이션을 굴립니다 — 한 번 지나가고 끝나는 연출이라
- *   무한 반복 애니메이션(경광등 등)을 CSS 로 두는 원칙과는 별개입니다.
- * ★ 기기에서 '동작 줄이기'를 켜 두었으면 타자 없이 한 번에 다 보여줍니다.
- */
-function useTypewriter(texts: string[], charMs: number, lineGapMs: number, reduced: boolean) {
-  const key = JSON.stringify(texts)
-  const [typed, setTyped] = useState<number[]>(() => texts.map(() => 0))
-
-  useEffect(() => {
-    if (reduced) {
-      setTyped(texts.map((t) => t.length))
-      return
-    }
-
-    setTyped(texts.map(() => 0))
-    let line = 0
-    let ch = 0
-    let timer = 0
-
-    const tick = () => {
-      if (line >= texts.length) return
-
-      // ★ 지금 줄·글자 수를 상수로 붙잡아 두고 넘깁니다.
-      //   setTyped 안에서 line·ch 를 그대로 읽으면 안 됩니다 —
-      //   React 가 그 함수를 나중에 실행하는데, 그때는 이미 다음 줄로 넘어가 있어서
-      //   각 줄이 마지막 한 글자를 남기고 멈춰버립니다.
-      const atLine = line
-      const atCh = ch + 1
-      ch = atCh
-
-      setTyped((prev) => {
-        const next = [...prev]
-        next[atLine] = atCh
-        return next
-      })
-
-      if (atCh >= texts[atLine].length) {
-        line += 1
-        ch = 0
-        timer = window.setTimeout(tick, lineGapMs)
-      } else {
-        timer = window.setTimeout(tick, charMs)
-      }
-    }
-
-    timer = window.setTimeout(tick, lineGapMs)
-    return () => clearTimeout(timer)
-    // texts 는 매번 새 배열이라 내용(key)으로 비교합니다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, charMs, lineGapMs, reduced])
-
-  return typed
-}
 
 /** 기기 설정의 '동작 줄이기' */
 function usePrefersReducedMotion() {
@@ -98,12 +42,14 @@ function usePrefersReducedMotion() {
  * 깜빡이는 빨간 네온 삼각형. 이 화면의 상징입니다.
  * ★ 작은 휴대폰(320x568)에서도 아래 여섯 줄까지 다 들어가야 하므로
  *   크기를 화면 높이·폭에 함께 묶어 둡니다. 고정 px 로 두면 넘칩니다.
+ *
+ * still = 점멸을 스스로 하지 않습니다(감싼 .qr-blink-group 이 대신 깜빡입니다).
  */
-function NeonTriangle({ small = false }: { small?: boolean }) {
+function NeonTriangle({ small = false, still = false }: { small?: boolean; still?: boolean }) {
   const w = small ? 'min(104px, 12vh, 30vw)' : 'min(150px, 17vh, 40vw)'
   return (
     <svg
-      className="qr-neon"
+      className={still ? 'qr-neon-still' : 'qr-neon'}
       style={{ width: w, height: `calc(${w} * 132 / 150)` }}
       viewBox="0 0 150 132"
       aria-hidden="true"
@@ -115,36 +61,32 @@ function NeonTriangle({ small = false }: { small?: boolean }) {
   )
 }
 
+const EASE = [0.2, 0.7, 0.2, 1] as const
+const GLIDE = [0.65, 0, 0.35, 1] as const
+
 export default function RevealScreen({ answers, onNext }: Props) {
   const cards = useMemo(() => buildCards(answers), [answers])
   const [stage, setStage] = useState<Stage>('alarm')
   const alarming = stage === 'alarm' || stage === 'punch'
   const reduced = usePrefersReducedMotion()
 
-  // 찍히는 건 값뿐입니다. 라벨은 그 줄 차례가 오면 바로 떠 있습니다
-  // (라벨까지 한 글자씩 찍으면 값이 나오기 전에 죽는 시간이 생깁니다).
-  const rows = useMemo(() => cards.map((c) => c.value), [cards])
-  const typed = useTypewriter(
-    rows,
-    reveal.timing.typeCharMs,
-    reveal.timing.typeLineGapMs,
-    reduced,
-  )
-  // 지금 찍히고 있는 줄(커서를 붙일 자리). 다 찍혔으면 -1.
-  const cursorLine = typed.findIndex((n, i) => n < rows[i].length)
+  /**
+   * 순차 등장 단계.
+   *   0: ! 만 (가운데, 크게)
+   *   1: + [경고]
+   *   2: + '개인정보 유출' (한 글자씩)
+   *   3: + 적은 값이 주르륵 (셋은 제 크기로 올라감)
+   *   4: 이메일 밑 [다음] 활성
+   * 화면 재배치(위로 올라감)는 framer-motion 의 layout 이 알아서 부드럽게 잇습니다.
+   */
+  const [phase, setPhase] = useState(0)
 
-  // 다 찍는 데 걸리는 시간 — 큰 글씨로 넘어가는 시점이 여기에 맞춰집니다
-  const typingMs = useMemo(
-    () =>
-      reduced
-        ? 400
-        : rows.reduce(
-            (sum, t) => sum + t.length * reveal.timing.typeCharMs + reveal.timing.typeLineGapMs,
-            reveal.timing.typeLineGapMs,
-          ),
-    [rows, reduced],
-  )
+  // 제목 '개인정보', '유출' 을 한 글자씩. 두 줄에 걸쳐 이어지는 순번을 매깁니다.
+  const titleLines = reveal.alarm.titleLines
+  const titleLen = titleLines.join('').length
 
+  // 삼각형 크기 — 처음엔 크게, 정보가 나올 즈음 제 크기로
+  const triScale = phase >= 3 ? 1 : phase >= 2 ? 1.22 : 1.5
 
   // 이름을 적었으면 이름을 부르고, 아니면 이름 없는 판을 씁니다
   const name = (answers.name ?? '').trim()
@@ -158,6 +100,46 @@ export default function RevealScreen({ answers, onNext }: Props) {
   const stopAlarmRef = useRef<() => void>(() => {})
   const tailTimerRef = useRef<number | undefined>(undefined)
   const advancedRef = useRef(false)
+
+  // ── 사이렌 (마운트 때 한 번 켜고, 질문 화면에서 끕니다) ──
+  useEffect(() => {
+    const stopAlarm = reveal.sound.enabled ? startAlarm(reveal.sound.volume) : () => {}
+    stopAlarmRef.current = stopAlarm
+    buzz([120, 90, 120, 90, 120, 90, 600])
+    return () => {
+      if (tailTimerRef.current) clearTimeout(tailTimerRef.current)
+      stopAlarm()
+      buzz(0)
+    }
+  }, [])
+
+  // ── 순차 등장 시간표 ──
+  useEffect(() => {
+    const T = reveal.timing
+    if (reduced) {
+      setPhase(4)
+      return
+    }
+    setPhase(0)
+    const timers: number[] = []
+    const tTag = T.triAloneMs
+    const tTitle = tTag + T.tagAloneMs
+    const tTitleDone = tTitle + 300 + titleLen * T.titleCharMs + 700
+    const tRows = tTitleDone + T.titleAloneMs
+    const tButton = tRows + 350 + Math.max(cards.length - 1, 0) * T.rowGapMs + 1100
+
+    timers.push(window.setTimeout(() => setPhase(1), tTag))
+    timers.push(window.setTimeout(() => setPhase(2), tTitle))
+    timers.push(
+      window.setTimeout(() => {
+        setPhase(3)
+        buzz(200)
+      }, tRows),
+    )
+    timers.push(window.setTimeout(() => setPhase(4), tButton))
+
+    return () => timers.forEach(clearTimeout)
+  }, [reduced, cards.length, titleLen])
 
   /**
    * 큰 글씨 화면에서 다음으로 넘어갑니다.
@@ -174,84 +156,125 @@ export default function RevealScreen({ answers, onNext }: Props) {
     }, reveal.timing.sirenTailMs)
   }, [])
 
+  // 큰 글씨 화면(punch)에 들어가면 punchMs 뒤 자동으로 질문으로
   useEffect(() => {
-    const timers: number[] = []
-    const T = reveal.timing
+    if (stage !== 'punch') return
+    const t = window.setTimeout(goQuestion, reveal.timing.punchMs)
+    return () => clearTimeout(t)
+  }, [stage, goQuestion])
 
-    const stopAlarm = reveal.sound.enabled ? startAlarm(reveal.sound.volume) : () => {}
-    stopAlarmRef.current = stopAlarm
-    buzz([120, 90, 120, 90, 120, 90, 600])
-
-    let at = typingMs + T.alarmHoldMs
-    timers.push(
-      window.setTimeout(() => {
-        setStage('punch')
-        buzz(300)
-      }, at),
-    )
-    at += T.punchMs
-
-    timers.push(window.setTimeout(goQuestion, at))
-
-    return () => {
-      timers.forEach(clearTimeout)
-      if (tailTimerRef.current) clearTimeout(tailTimerRef.current)
-      stopAlarm()
-      buzz(0)
-    }
-  }, [typingMs, goQuestion])
+  // [다음] — 순차 등장 → 큰 글씨. 사운드/진동은 그대로 이어집니다.
+  const toPunch = useCallback(() => {
+    setStage('punch')
+    buzz(300)
+  }, [])
 
   return (
     <div
       className={`fixed inset-0 overflow-hidden ${alarming ? 'qr-night' : ''}`}
       style={{ backgroundColor: NIGHT }}
     >
-      {/* ── 1단계 · 유출 기록 ──────────────────────────
-          검은 화면에 빨간 네온 경고가 깜빡이고, 그 아래로
-          참가자가 방금 적은 값이 한 글자씩 찍힙니다.
-          "내가 적은 그 글자"가 눈앞에서 타이핑되는 것이 이 화면의 전부입니다. */}
+      {/* ── 1단계 · 순차 등장 ──────────────────────────
+          가운데의 ! 부터 시작해, 새 글자가 나올 때마다 위의 것들이 밀려 올라갑니다.
+          그 밀림은 아래 motion.div 들의 layout 이 부드럽게 잇습니다. */}
       <Layer active={stage === 'alarm'}>
-        <div
-          className="flex w-full max-w-[400px] flex-col items-center text-center"
-          data-role="leak-record"
-        >
-          <NeonTriangle />
+        <motion.div layout className="flex w-full max-w-[400px] flex-col items-center text-center">
+          {/* 삼각형 · [경고] · 제목 — 셋이 같은 박자로 함께 깜빡입니다 */}
+          <motion.div
+            layout
+            className="qr-blink-group flex w-full flex-col items-center"
+          >
+            <motion.div
+              layout
+              animate={{ scale: triScale }}
+              transition={{ duration: 0.85, ease: GLIDE }}
+              style={{ transformOrigin: '50% 50%' }}
+            >
+              <NeonTriangle still />
+            </motion.div>
 
-          <span className="qr-neon qr-neon-tag mt-[clamp(10px,2vh,16px)] px-3.5 py-0.5 text-[clamp(17px,4.8vw,25px)] font-bold tracking-[0.14em]">
-            {reveal.alarm.badge}
-          </span>
+            {phase >= 1 && (
+              <motion.span
+                layout
+                className="qr-neon-tag mt-[clamp(10px,2vh,16px)] px-3.5 py-0.5 text-[clamp(17px,4.8vw,25px)] font-bold tracking-[0.14em]"
+                initial={{ opacity: 0, scale: 1.4, filter: 'blur(6px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >
+                {reveal.alarm.badge}
+              </motion.span>
+            )}
 
-          <h2 className="qr-neon-text mt-[clamp(8px,1.6vh,12px)] text-[clamp(26px,8vw,44px)] leading-[1.06] font-bold tracking-tight text-white">
-            {reveal.alarm.titleLines.map((line, i) => (
-              <span key={i} className="block">
-                {line}
-              </span>
-            ))}
-          </h2>
+            {phase >= 2 && (
+              <motion.h2
+                layout
+                className="qr-neon-text mt-[clamp(6px,1.4vh,12px)] text-[clamp(26px,8vw,44px)] leading-[1.06] font-bold tracking-tight text-white"
+              >
+                {(() => {
+                  let n = -1
+                  return titleLines.map((line, li) => (
+                    <span key={li} className="block">
+                      {[...line].map((chr) => {
+                        n += 1
+                        return (
+                          <motion.span
+                            key={n}
+                            className="inline-block"
+                            initial={{ opacity: 0, y: '0.4em', scale: 1.6, filter: 'blur(8px)' }}
+                            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                            transition={{ duration: 0.6, delay: n * (reveal.timing.titleCharMs / 1000), ease: EASE }}
+                          >
+                            {chr}
+                          </motion.span>
+                        )
+                      })}
+                    </span>
+                  ))
+                })()}
+              </motion.h2>
+            )}
+          </motion.div>
 
-          {/* 적은 값 — 가운데 정렬, 한 줄씩 */}
-          <div className="mt-[clamp(14px,3vh,24px)] w-full">
-            {cards.map((card, i) => {
-              // 아직 차례가 오지 않은 줄은 라벨도 감춥니다 — 몇 개나 더 남았는지
-              // 미리 알려주지 않는 쪽이 조입니다.
-              const started = cursorLine === -1 || i <= cursorLine
-              return (
-                <div key={card.id} className="mb-[clamp(6px,1.2vh,10px)]">
-                  <p
-                    className="text-[clamp(10px,2.8vw,11px)] tracking-[0.24em] text-[#ff6a76] transition-opacity duration-300"
-                    style={{ opacity: started ? 1 : 0 }}
-                  >
+          {/* 적은 값 — 한 줄씩 위에서 흘러내리듯 */}
+          {phase >= 3 && (
+            <motion.div layout className="mt-[clamp(12px,2.2vh,24px)] w-full" data-role="leak-record">
+              {cards.map((card, i) => (
+                <motion.div
+                  key={card.id}
+                  className="mb-[clamp(6px,1.2vh,10px)]"
+                  initial={{ opacity: 0, y: -22, filter: 'blur(6px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.6, delay: i * (reveal.timing.rowGapMs / 1000), ease: EASE }}
+                >
+                  <p className="text-[clamp(10px,2.8vw,11px)] tracking-[0.24em] text-[#ff6a76]">
                     {card.label}
                   </p>
                   <p className="qr-neon-text min-h-[1.25em] text-[clamp(17px,5.4vw,25px)] leading-[1.25] font-bold break-all text-white">
-                    {card.value.slice(0, typed[i] ?? 0)}
-                    {i === cursorLine && <span className="qr-caret">|</span>}
+                    {card.value}
                   </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* 이메일 밑 [다음] — 다 나온 뒤 떠오릅니다. 그 전에는 눌리지 않습니다.
+              ★ 자동으로 넘어가지 않습니다. 관람객이 직접 누를 때까지 기다립니다. */}
+          {phase >= 3 && (
+            <motion.button
+              onClick={toPunch}
+              data-role="alarm-next"
+              disabled={phase < 4}
+              className="mt-[clamp(14px,2.4vh,26px)] h-[52px] w-full rounded-sm bg-white text-[17px] font-bold text-[#0a0b12]"
+              style={{ pointerEvents: phase >= 4 ? 'auto' : 'none' }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: phase >= 4 ? 1 : 0, y: phase >= 4 ? 0 : 14 }}
+              transition={{ duration: 0.7, ease: EASE }}
+            >
+              {reveal.alarm.nextButton}
+            </motion.button>
+          )}
+        </motion.div>
       </Layer>
 
       {/* ── 2단계 · 마지막 문구 ─────────────────────────

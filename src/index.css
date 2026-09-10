@@ -867,6 +867,26 @@ button {
   }
 }
 
+/* 네온 번짐만(점멸 없음). 삼각형·[경고]·제목을 한 덩어리로 함께 깜빡이게 할 때,
+   각자 따로 깜빡이면 박자가 어긋나 화면 전체로는 더 자주 번쩍이는 셈이 됩니다.
+   그래서 번짐(그림자)만 여기서 주고, 점멸은 셋을 감싼 .qr-blink-group 이 한 번에 겁니다. */
+.qr-neon-still {
+  filter: drop-shadow(0 0 6px #ff2d3c) drop-shadow(0 0 18px #ff2d3c)
+    drop-shadow(0 0 42px rgba(255, 45, 60, 0.7));
+}
+
+/* 삼각형 + [경고] + '개인정보 유출' 을 같은 박자로 함께 깜빡입니다.
+   ⚠️ 1Hz — 위 .qr-neon 과 같은 이유로 이보다 빠르게 하지 마세요(광과민성). */
+.qr-blink-group {
+  animation: qr-neon 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-blink-group {
+    animation: none !important;
+  }
+}
+
 /* ── 전송 중 화면의 차오르는 막대 ────────────────────
    시간은 SendingScreen 이 ui.json 의 holdMs 를 그대로 넘겨줍니다. */
 @keyframes qr-sending-bar {

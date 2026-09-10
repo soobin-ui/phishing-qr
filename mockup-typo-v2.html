@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>유출 화면 시안 v2 — 가운데 ! 부터 위로 밀려 올라가며</title>
+    <!--
+      ★ 이 파일은 시안 검토용입니다. 앱 빌드에 포함되지 않습니다
+        (vite 는 index.html 만 빌드 입력으로 잡습니다).
+        보는 법: 개발 서버를 켜고 http://localhost:5176/mockup-typo-v2.html
+
+      흐름
+        전송 중 → 암전
+        → ! 가 화면 가운데서 크게 반짝반짝
+        → 그 밑에 [경고]
+        → ! 와 [경고]가 위로 올라가며 '개인정보 유출'이 타이포 모션으로 등장, 같이 반짝반짝
+        → '개인정보 유출'까지 위로 조금 더 올라가며 적은 정보가 주르륵
+
+      ⚠️ 반짝임은 전부 1초에 한 번(1Hz), 셋이 같은 박자로 켜졌다 꺼집니다.
+         박자가 어긋나면 화면 전체로는 더 자주 깜빡이는 셈이라 맞춰 둡니다.
+         광과민성 기준(초당 3회) 때문에 이보다 빠르게 하지 마세요.
+    -->
+    <style>
+      @font-face {
+        font-family: 'Gmarket Sans';
+        src: url('./src/assets/fonts/GmarketSansMedium.subset.woff2') format('woff2');
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: 'Gmarket Sans';
+        src: url('./src/assets/fonts/GmarketSansBold.subset.woff2') format('woff2');
+        font-weight: 700;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 22px 20px 40px;
+        background: #16181d;
+        color: #fff;
+        font-family: 'Gmarket Sans', -apple-system, 'Malgun Gothic', sans-serif;
+      }
+      .wrap {
+        display: flex;
+        gap: 40px;
+        width: max-content;
+        margin: 0 auto;
+      }
+
+      .phone {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        border-radius: 14px;
+        background: #000;
+      }
+
+      /* ── 오른쪽 · 진행 순서 ─────────────────────────── */
+      .side {
+        width: 300px;
+        padding-top: 4px;
+      }
+      .side h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #eef0f4;
+      }
+      .side .sub {
+        margin: 0 0 22px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #8a919c;
+      }
+      .steps {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .steps li {
+        display: flex;
+        gap: 12px;
+        padding: 11px 12px;
+        border-left: 3px solid #2a2f38;
+        font-size: 14px;
+        line-height: 1.45;
+        color: #6f7682;
+        transition:
+          color 0.3s,
+          border-color 0.3s,
+          background 0.3s;
+      }
+      .steps li b {
+        flex: none;
+        width: 44px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        color: #555c67;
+      }
+      .steps li.done {
+        color: #b5bbc5;
+      }
+      .steps li.on {
+        border-color: #ff2d3c;
+        background: rgba(255, 45, 60, 0.1);
+        color: #fff;
+        font-weight: 700;
+      }
+      .steps li.on b {
+        color: #ff8a92;
+      }
+      .ctrl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      .ctrl button {
+        flex: 1;
+        height: 44px;
+        border: 0;
+        border-radius: 8px;
+        background: #ff2d3c;
+        color: #fff;
+        font: 700 15px 'Gmarket Sans', sans-serif;
+        cursor: pointer;
+      }
+      .clock {
+        width: 90px;
+        font-size: 14px;
+        color: #8a919c;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ── 전송 중 — 지금 앱의 SendingScreen 과 같은 모양 ── */
+      .scr {
+        position: absolute;
+        inset: 0;
+      }
+      .sending {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 32px;
+        background: #fff;
+        text-align: center;
+      }
+      .spin {
+        width: 48px;
+        height: 48px;
+        border: 3px solid #e5e7eb;
+        border-top-color: #263b7c;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .sending p {
+        margin: 24px 0 0;
+        font-size: 17px;
+        line-height: 1.6;
+        color: #4b5563;
+      }
+      .track {
+        width: 100%;
+        max-width: 260px;
+        height: 4px;
+        margin-top: 28px;
+        overflow: hidden;
+        border-radius: 99px;
+        background: #e5e7eb;
+      }
+      .bar {
+        width: 0;
+        height: 100%;
+        border-radius: 99px;
+        background: #263b7c;
+      }
+
+      /* ── 검은 화면 ──────────────────────────────────── */
+      .night {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: #05060a;
+      }
+      /* 빨간 기운(지금 앱의 .qr-night 와 같은 값)은 ! 가 켜지면서 번집니다 */
+      .glow {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        background:
+          radial-gradient(80% 55% at 50% 20%, rgba(190, 20, 30, 0.42), rgba(0, 0, 0, 0) 70%),
+          repeating-linear-gradient(90deg, rgba(255, 60, 60, 0.05) 0 2px, rgba(0, 0, 0, 0) 2px 6px);
+      }
+
+      /* 최종 배치(모든 게 제자리에 온 모습)로 쌓아 두고,
+         앞 단계에서는 각 덩어리를 transform 으로 가운데 쪽에 옮겨 둡니다. */
+      .stack {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        text-align: center;
+      }
+      .pos {
+        will-change: transform;
+      }
+
+      .neon {
+        filter: drop-shadow(0 0 6px #ff2d3c) drop-shadow(0 0 18px #ff2d3c)
+          drop-shadow(0 0 42px rgba(255, 45, 60, 0.7));
+      }
+      /* ⚠️ 1Hz — 광과민성 기준(초당 3회)의 3분의 1. 올리지 말 것 */
+      .blink {
+        animation: neon 1s ease-in-out infinite;
+      }
+      @keyframes neon {
+        0%,
+        46%,
+        100% {
+          opacity: 1;
+        }
+        52% {
+          opacity: 0.28;
+        }
+        60% {
+          opacity: 1;
+        }
+      }
+
+      .tri {
+        width: 143px;
+        height: calc(143px * 132 / 150);
+        opacity: 0;
+      }
+      .tri svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .p-tag {
+        margin-top: 16px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 14px;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: #ff5666;
+        border: 3px solid #ff2d3c;
+        text-shadow: 0 0 10px rgba(255, 45, 60, 0.9);
+        box-shadow:
+          0 0 16px rgba(255, 45, 60, 0.5),
+          inset 0 0 16px rgba(255, 45, 60, 0.25);
+        opacity: 0;
+      }
+      .ntext {
+        text-shadow:
+          0 0 12px rgba(255, 60, 70, 0.8),
+          0 0 34px rgba(255, 45, 60, 0.55);
+      }
+      .p-title {
+        margin-top: 12px;
+      }
+      .title {
+        margin: 0;
+        font-size: 31px;
+        line-height: 1.06;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .title .tl {
+        display: block;
+      }
+      .ch {
+        display: inline-block;
+        white-space: pre;
+        opacity: 0;
+      }
+
+      .rows {
+        width: 100%;
+        margin-top: 22px;
+      }
+      .row {
+        margin-bottom: 10px;
+        opacity: 0;
+      }
+      .lab {
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 0.24em;
+        color: #ff6a76;
+      }
+      .val {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        min-height: 1.25em;
+        margin: 2px 0 0;
+        font-size: 21px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      /* [다음] — 지금 앱 2단계(마지막 문구)의 흰 버튼과 같은 모양.
+         흰 버튼이 눈에 띄어야 뒤에 더 있다는 걸 압니다. */
+      .next {
+        width: 100%;
+        height: 56px;
+        margin-top: 24px;
+        border: 0;
+        border-radius: 2px;
+        background: #fff;
+        color: #0a0b12;
+        font: 700 17px 'Gmarket Sans', sans-serif;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .next:active {
+        transform: scale(0.97);
+      }
+
+      /* [다음]을 누르면 넘어가는 화면 (지금 앱의 2단계 문구 — 흐름 확인용) */
+      .punch {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .punch .tri-s {
+        width: 104px;
+        height: calc(104px * 132 / 150);
+      }
+      .punch .pl {
+        margin: 0;
+        font-size: 29px;
+        line-height: 1.24;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        opacity: 0;
+      }
+      .punch .pl:first-of-type {
+        margin-top: 28px;
+      }
+
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          120% 86% at 50% 44%,
+          rgba(0, 0, 0, 0) 46%,
+          rgba(0, 0, 0, 0.34) 84%,
+          rgba(0, 0, 0, 0.66) 100%
+        );
+      }
+      .grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.045;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+        background-size: 140px 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="wrap">
+      <div class="phone" id="phone">
+        <div class="scr night">
+          <div class="glow"></div>
+          <div class="stack">
+            <div class="pos p-tri">
+              <div class="b-tri">
+                <div class="tri neon">
+                  <svg viewBox="0 0 150 132" aria-hidden="true">
+                    <path d="M75 10 L142 122 H8 Z" fill="none" stroke="#ff2d3c" stroke-width="9" stroke-linejoin="round" />
+                    <path d="M75 48 V86" stroke="#ff2d3c" stroke-width="10" stroke-linecap="round" />
+                    <circle cx="75" cy="103" r="6" fill="#ff2d3c" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="pos p-tag">
+              <div class="b-tag"><span class="tag">[경고]</span></div>
+            </div>
+            <div class="pos p-title">
+              <h2 class="title ntext b-title"><span class="tl"></span><span class="tl"></span></h2>
+            </div>
+            <div class="rows"></div>
+            <button class="next" id="next">다음</button>
+          </div>
+          <div class="punch" id="punch">
+            <svg class="tri-s neon blink" viewBox="0 0 150 132" aria-hidden="true">
+              <path d="M75 10 L142 122 H8 Z" fill="none" stroke="#ff2d3c" stroke-width="9" stroke-linejoin="round" />
+              <path d="M75 48 V86" stroke="#ff2d3c" stroke-width="10" stroke-linecap="round" />
+              <circle cx="75" cy="103" r="6" fill="#ff2d3c" />
+            </svg>
+            <p class="pl ntext">홍길동 님,</p>
+            <p class="pl ntext">당신의 개인정보가</p>
+            <p class="pl ntext">단 한 번의 클릭으로</p>
+            <p class="pl ntext">넘어갔습니다.</p>
+          </div>
+          <div class="vignette"></div>
+          <div class="grain"></div>
+        </div>
+        <div class="scr sending">
+          <div class="spin"></div>
+          <p>정보를 전송하는 중입니다</p>
+          <div class="track"><div class="bar"></div></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <h1>유출 화면 시안 v2</h1>
+        <p class="sub">가운데 ! 부터 시작해서, 새 글자가 나올 때마다<br />위의 것들이 한 칸씩 밀려 올라갑니다.</p>
+        <ol class="steps" id="steps"></ol>
+        <div class="ctrl">
+          <button id="replay">다시 보기</button>
+          <span class="clock" id="clock">0.0초</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 참가자가 적었다고 치는 값 (실제 앱은 본인이 적은 값)
+      const DATA = [
+        ['이름', '홍길동'],
+        ['휴대폰', '010-1234-5678'],
+        ['생년월일', '1996.03.14'],
+        ['관심 분야', '취업·이직'],
+        ['거주 지역', '서울'],
+        ['이메일', 'gildong@email.com'],
+      ]
+      const TITLE = ['개인정보', '유출']
+
+      // ── 타이밍 (밀리초) ────────────────────────────
+      const T = {
+        send: 1800, //       전송 중 화면
+        blackout: 600, //    완전한 암전
+        triAlone: 2600, //   ! 혼자 가운데서 반짝이는 시간 (2~3번 깜빡)
+        tagAlone: 1500, //   ! + [경고] 둘이 있는 시간
+        move: 1000, //       위로 밀려 올라가는 데 걸리는 시간
+        titleChar: 110, //   '개인정보 유출' 한 글자 간격
+        titleAlone: 2000, // '개인정보 유출'까지 다 나오고 반짝이는 시간
+        rowGap: 420, //      정보 한 줄과 다음 줄 사이 — 주르륵
+      }
+
+      // 단계별 크기 — 처음엔 크게, 올라갈수록 제 크기로
+      const SIZE = {
+        p1: { tri: 1.6 },
+        p2: { tri: 1.6, tag: 1.2 },
+        p3: { tri: 1.25, tag: 1.1, title: 1.2 },
+      }
+
+      const GLIDE = 'cubic-bezier(.65,0,.35,1)'
+      const EASE = 'cubic-bezier(.2,.7,.2,1)'
+      const $ = (s) => document.querySelector(s)
+      const phone = $('#phone')
+
+      // 정보 줄 만들기
+      DATA.forEach(([lab]) => {
+        const r = document.createElement('div')
+        r.className = 'row'
+        r.innerHTML = `<p class="lab">${lab}</p><p class="val"></p>`
+        $('.rows').appendChild(r)
+      })
+      // 제목 글자 쪼개기
+      document.querySelectorAll('.tl').forEach((line, i) => {
+        line.innerHTML = [...TITLE[i]].map((c) => `<span class="ch">${c}</span>`).join('')
+      })
+
+      // 진행 순서 (오른쪽 목록)
+      const STEPS = []
+      function step(ms, text) {
+        STEPS.push({ ms, text })
+      }
+
+      let run = null
+
+      function start() {
+        if (run) {
+          run.timers.forEach(clearTimeout)
+          run.anims.forEach((a) => a.cancel())
+          cancelAnimationFrame(run.raf)
+        }
+        run = { timers: [], anims: [], raf: 0 }
+        const at = (ms, fn) => run.timers.push(setTimeout(fn, ms))
+        const anim = (el, kf, opt) => {
+          const a = el.animate(kf, { fill: 'forwards', ...opt })
+          run.anims.push(a)
+          return a
+        }
+
+        // 초기화
+        $('.sending').style.display = 'flex'
+        document.querySelectorAll('.blink').forEach((e) => e.classList.remove('blink'))
+        document.querySelectorAll('.val').forEach((e) => (e.innerHTML = ''))
+        $('#next').style.pointerEvents = 'none'
+        run.nexted = false
+
+        // ── 최종 배치에서 각 덩어리의 가운데 높이를 잽니다 ──
+        //    (창 확대/축소가 걸려 있어도 폰 기준 px 로 환산)
+        const pr = phone.getBoundingClientRect()
+        const k = pr.height / 844
+        const box = (sel) => {
+          const r = $(sel).getBoundingClientRect()
+          return { c: (r.top + r.height / 2 - pr.top) / k, h: r.height / k }
+        }
+        const tri = box('.p-tri')
+        const tag = box('.p-tag')
+        const ttl = box('.p-title')
+        const MID = 844 / 2
+
+        // 단계별로 덩어리가 있어야 할 가운데 높이
+        const P1 = { tri: MID - 30 }
+        const P2 = { tri: P1.tri, tag: P1.tri + (tri.h * SIZE.p2.tri) / 2 + 22 + (tag.h * SIZE.p2.tag) / 2 }
+        const P3 = (() => {
+          const s = SIZE.p3
+          const hT = tri.h * s.tri
+          const hG = tag.h * s.tag
+          const hH = ttl.h * s.title
+          const total = hT + 18 + hG + 16 + hH
+          const top = MID - 50 - total / 2
+          return { tri: top + hT / 2, tag: top + hT + 18 + hG / 2, title: top + hT + 18 + hG + 16 + hH / 2 }
+        })()
+
+        // 덩어리마다 지금 위치를 기억해 두고, 다음 위치로 미끄러지게
+        const pos = {
+          tri: { el: $('.p-tri'), final: tri.c, y: 0, s: 1 },
+          tag: { el: $('.p-tag'), final: tag.c, y: 0, s: 1 },
+          title: { el: $('.p-title'), final: ttl.c, y: 0, s: 1 },
+        }
+        const tf = (y, s) => `translateY(${y}px) scale(${s})`
+        function place(key, center, s, dur = 0) {
+          const p = pos[key]
+          const y = center - p.final
+          anim(p.el, [{ transform: tf(p.y, p.s) }, { transform: tf(y, s) }], { duration: dur, easing: GLIDE })
+          p.y = y
+          p.s = s
+        }
+        // 반짝임은 셋이 같은 박자로 — 문서 시계에 맞춰 1초 주기의 같은 자리에서 시작
+        function blinkOn(el) {
+          el.style.animationDelay = `${-(document.timeline.currentTime % 1000)}ms`
+          el.classList.add('blink')
+        }
+
+        // 시작 자리: ! 는 가운데 크게, [경고]는 그 밑
+        place('tri', P1.tri, SIZE.p1.tri)
+        place('tag', P2.tag, SIZE.p2.tag)
+        place('title', P2.tag + 60, SIZE.p3.title)
+
+        // ── 시간표 ──────────────────────────────────
+        STEPS.length = 0
+        const B = T.send
+        const Z = B + T.blackout
+        const tTag = Z + T.triAlone
+        const tUp1 = tTag + T.tagAlone
+        const tTitle = tUp1 + 300
+        const titleLen = TITLE.join('').length
+        const tTitleDone = tTitle + titleLen * T.titleChar + 700
+        const tUp2 = tTitleDone + T.titleAlone
+        const tRows = tUp2 + 350
+        const tNext = tRows + (DATA.length - 1) * T.rowGap + 1100 // 이메일까지 다 나온 뒤
+        const tEnd = tNext + 700
+
+        step(0, '전송 중')
+        step(B, '암전')
+        step(Z, '! 가 가운데서 크게 켜지고 반짝반짝')
+        step(tTag, '그 밑에 [경고]')
+        step(tUp1, '둘이 위로 올라가며 개인정보 유출 — 한 글자씩')
+        step(tTitleDone, '셋이 같이 반짝반짝')
+        step(tUp2, '한 칸 더 올라가며 정보가 주르륵')
+        step(tNext, '이메일 밑에 [다음] — 누르면 다음 화면')
+        renderSteps()
+
+        // 1) 전송 중
+        anim($('.bar'), [{ width: '0%' }, { width: '100%' }], {
+          duration: T.send,
+          easing: 'cubic-bezier(.35,.6,.5,1)',
+        })
+        at(B, () => ($('.sending').style.display = 'none'))
+
+        // 2) ! — 가운데서 번지며 켜지고, 이후 계속 1Hz 반짝
+        anim(
+          $('.tri'),
+          [
+            { opacity: 0, transform: 'scale(.5)', filter: 'blur(12px)' },
+            { opacity: 1, transform: 'scale(1.08)', filter: 'blur(0)', offset: 0.5 },
+            { opacity: 0.3, transform: 'scale(1.03)', offset: 0.66 },
+            { opacity: 1, transform: 'scale(1)', filter: 'blur(0)' },
+          ],
+          { duration: 950, delay: Z, easing: 'ease-out' },
+        )
+        anim($('.glow'), [{ opacity: 0 }, { opacity: 1 }], { duration: 1500, delay: Z })
+        at(Z + 950, () => blinkOn($('.b-tri')))
+
+        // 3) [경고] — ! 밑에 쾅 찍힘
+        anim(
+          $('.tag'),
+          [
+            { opacity: 0, transform: 'scale(1.5)', filter: 'blur(6px)' },
+            { opacity: 1, transform: 'scale(.96)', filter: 'blur(0)', offset: 0.6 },
+            { opacity: 1, transform: 'scale(1)' },
+          ],
+          { duration: 650, delay: tTag, easing: 'ease-out' },
+        )
+        at(tTag + 650, () => blinkOn($('.b-tag')))
+
+        // 4) 둘이 위로 올라가고, 비운 자리에 '개인정보 유출'
+        at(tUp1, () => {
+          place('tri', P3.tri, SIZE.p3.tri, T.move)
+          place('tag', P3.tag, SIZE.p3.tag, T.move)
+          place('title', P3.title, SIZE.p3.title, 0)
+        })
+        document.querySelectorAll('.title .ch').forEach((ch, i) =>
+          anim(
+            ch,
+            [
+              { opacity: 0, transform: 'translateY(.4em) scale(1.7)', filter: 'blur(10px)' },
+              { opacity: 1, transform: 'translateY(0) scale(.94)', filter: 'blur(0)', offset: 0.65 },
+              { opacity: 1, transform: 'translateY(0) scale(1)', filter: 'blur(0)' },
+            ],
+            { duration: 700, delay: tTitle + i * T.titleChar, easing: EASE },
+          ),
+        )
+        at(tTitleDone, () => blinkOn($('.b-title')))
+
+        // 5) 셋이 한 칸 더 올라가 제자리로 → 그 밑으로 정보가 주르륵
+        at(tUp2, () => {
+          place('tri', tri.c, 1, T.move)
+          place('tag', tag.c, 1, T.move)
+          place('title', ttl.c, 1, T.move)
+        })
+        const rows = document.querySelectorAll('.row')
+        const vals = document.querySelectorAll('.val')
+        DATA.forEach(([, value], i) => {
+          const t = tRows + i * T.rowGap
+          anim(
+            rows[i],
+            [
+              { opacity: 0, transform: 'translateY(-26px)', filter: 'blur(6px)' },
+              { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
+            ],
+            { duration: 700, delay: t, easing: EASE },
+          )
+          at(t, () => {
+            vals[i].innerHTML = ''
+            ;[...value].forEach((c, j) => {
+              const sp = document.createElement('span')
+              sp.className = 'ch ntext'
+              sp.textContent = c
+              vals[i].appendChild(sp)
+              run.anims.push(
+                sp.animate(
+                  [
+                    { opacity: 0, transform: 'translateY(-.6em)', filter: 'blur(5px)' },
+                    { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
+                  ],
+                  { duration: 500, delay: 80 + j * 32, easing: EASE, fill: 'forwards' },
+                ),
+              )
+            })
+          })
+        })
+
+        // 6) 이메일 밑에 [다음] — 다 나온 뒤에 떠오릅니다(그 전에 누르면 정보를 다 못 봄)
+        anim(
+          $('#next'),
+          [
+            { opacity: 0, transform: 'translateY(14px)' },
+            { opacity: 1, transform: 'translateY(0)' },
+          ],
+          { duration: 700, delay: tNext, easing: EASE },
+        )
+        at(tNext, () => ($('#next').style.pointerEvents = 'auto'))
+
+        // 진행 시계 + 목록 불빛
+        const t0 = performance.now()
+        const tick = () => {
+          const t = performance.now() - t0
+          $('#clock').textContent = t < tEnd ? `${(t / 1000).toFixed(1)}초` : `끝 · ${(tEnd / 1000).toFixed(1)}초`
+          const cur = STEPS.filter((s) => s.ms <= t).length - 1
+          document.querySelectorAll('#steps li').forEach((li, i) => {
+            li.className = i < cur ? 'done' : i === cur ? 'on' : ''
+          })
+          if (t < tEnd + 50) run.raf = requestAnimationFrame(tick)
+        }
+        tick()
+      }
+
+      function renderSteps() {
+        $('#steps').innerHTML = STEPS.map(
+          (s) => `<li><b>${(s.ms / 1000).toFixed(1)}초</b><span>${s.text}</span></li>`,
+        ).join('')
+      }
+
+      $('#replay').onclick = start
+
+      // [다음] → 유출 기록이 빠지고 지금 앱의 2단계 문구가 서서히 떠오름 (흐름 확인용)
+      $('#next').onclick = () => {
+        if (!run || run.nexted) return
+        run.nexted = true
+        $('#next').style.pointerEvents = 'none'
+        const fade = (el, from, to, opt) =>
+          run.anims.push(el.animate([{ opacity: from }, { opacity: to }], { fill: 'forwards', ...opt }))
+        fade($('.stack'), 1, 0, { duration: 400 })
+        document.querySelectorAll('.punch .pl').forEach((p, i) =>
+          run.anims.push(
+            p.animate(
+              [
+                { opacity: 0, transform: 'translateY(14px)' },
+                { opacity: 1, transform: 'translateY(0)' },
+              ],
+              { duration: 1000, delay: 900 + i * 340, easing: 'ease-out', fill: 'forwards' },
+            ),
+          ),
+        )
+        fade($('#punch'), 0, 1, { duration: 500, delay: 350 })
+        document.querySelectorAll('#steps li').forEach((li) => (li.className = 'done'))
+      }
+
+      // 창 크기에 맞춰 폰이 한 화면에 다 보이게
+      function fit() {
+        const z = Math.min(1, (innerWidth - 40) / (390 + 40 + 300), (innerHeight - 50) / 844)
+        $('#wrap').style.zoom = Math.max(z, 0.4)
+      }
+      addEventListener('resize', fit)
+      fit()
+
+      document.fonts.ready.then(start)
+    </script>
+  </body>
+</html>

@@ -145,17 +145,11 @@ for (const [label, w, h] of DEVICES) {
   await wait(400)
   await measure('전송중')
 
-  // [3] 유출 기록 — 다 찍힌 뒤가 가장 깁니다
-  // ★ 전송 중 화면에는 커서가 없습니다. 커서 없음만 보면 그 화면을 유출 기록으로
-  //   착각하므로, 유출 기록이 실제로 떴는지 먼저 확인하고 나서 다 찍혔는지를 봅니다.
-  await page.waitForFunction(
-    () => {
-      const r = document.querySelector('[data-role="leak-record"]')
-      return !!r && r.offsetParent !== null && !document.querySelector('.qr-caret')
-    },
-    { timeout: 30000 },
-  )
+  // [3] 순차 등장 — ! → [경고] → 개인정보 유출 → 적은 값 주르륵.
+  // 이메일까지 다 나와 [다음]이 켜진 순간이 화면이 가장 깁니다(그때 넘침을 봅니다).
+  await whenVisible(page, 'alarm-next')
   await measure('유출기록')
+  await click(page, 'alarm-next')
 
   // [3] 문구
   await whenVisible(page, 'punch-next')

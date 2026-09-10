@@ -89,13 +89,27 @@ await page.evaluate(() => {
 await wait(700)
 await shot('sending')
 
-// [3] 빨간 화면 — 값이 한 글자씩 찍히는 중
-await wait(1800)
-await shot('leak-typing')
-await wait(1400)
-await shot('leak-typing2')
+// [3] 빨간 화면 — ! → [경고] → 개인정보 유출 → 적은 값이 한 줄씩 주르륵
+await wait(1200)
+await shot('leak-tri')
+await wait(3200)
+await shot('leak-title')
 
-// 큰 글씨 — 다 찍히고 뜹니다. 시간이 항목 길이에 따라 달라지므로 버튼이 뜰 때까지 기다립니다.
+// 적은 값까지 다 나오고 [다음]이 켜질 때까지 기다립니다(항목 길이에 따라 시간이 달라집니다).
+await page.waitForFunction(
+    () => {
+      const b = document.querySelector('[data-role="alarm-next"]')
+      return !!b && getComputedStyle(b).pointerEvents !== 'none'
+    },
+    { timeout: 30000 },
+  )
+await wait(200)
+await shot('leak-done')
+
+// [다음] 을 눌러 큰 글씨 화면으로 (자동으로 넘어가지 않습니다 — 눌러야 넘어갑니다)
+await page.evaluate(() => document.querySelector('[data-role="alarm-next"]').click())
+
+// 큰 글씨 — 뜰 때까지 기다립니다.
 await page.waitForFunction(
     () => {
       const b = document.querySelector('[data-role="punch-next"]')
@@ -103,8 +117,6 @@ await page.waitForFunction(
     },
     { timeout: 25000 },
   )
-await wait(200)
-await shot('leak-done')
 await wait(900)
 await shot('punch')
 
