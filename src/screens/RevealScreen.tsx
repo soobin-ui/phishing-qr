@@ -124,9 +124,9 @@ export default function RevealScreen({ answers, onNext }: Props) {
     const timers: number[] = []
     const tTag = T.triAloneMs
     const tTitle = tTag + T.tagAloneMs
-    const tTitleDone = tTitle + 300 + titleLen * T.titleCharMs + 700
+    const tTitleDone = tTitle + 150 + titleLen * T.titleCharMs + 400
     const tRows = tTitleDone + T.titleAloneMs
-    const tButton = tRows + 350 + Math.max(cards.length - 1, 0) * T.rowGapMs + 1100
+    const tButton = tRows + 200 + Math.max(cards.length - 1, 0) * T.rowGapMs + 800
 
     timers.push(window.setTimeout(() => setPhase(1), tTag))
     timers.push(window.setTimeout(() => setPhase(2), tTitle))
@@ -187,7 +187,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
             <motion.div
               layout
               animate={{ scale: triScale }}
-              transition={{ duration: 0.85, ease: GLIDE }}
+              transition={{ duration: 0.55, ease: GLIDE }}
               style={{ transformOrigin: '50% 50%' }}
             >
               <NeonTriangle still />
