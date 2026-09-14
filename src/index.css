@@ -510,6 +510,29 @@ button {
   animation: qr-lit var(--qr-half) ease-in-out infinite;
 }
 
+/*
+  ★ 안전(광과민성) — '동작 줄이기'를 켠 관람객에게는 경광봉의 적·청 점멸을 멈춥니다.
+    이 점멸(약 초당 2.9회, 화면 대부분을 덮는 적↔청)이 광과민성 발작을 유발할 수 있는
+    바로 그 패턴이고, 점멸에 민감한 사람일수록 기기에서 '동작 줄이기'를 켜 두는 경우가
+    많습니다. 그래서 그 설정을 존중해 여기서는 불을 '켜진 채로 멈춘' 정지 화면으로 둡니다
+    (애니메이션만 끄면 각 요소가 0% 상태 — 빨강 켜짐/파랑 꺼짐 — 로 고정됩니다).
+    나머지 점멸(네온·타자 커서 등)은 각자의 블록에서 이미 꺼집니다. */
+@media (prefers-reduced-motion: reduce) {
+  .qr-screenflash-red,
+  .qr-screenflash-blue,
+  .qr-lit,
+  .qr-beacon,
+  .qr-beam-red,
+  .qr-beam-blue,
+  .qr-halo-red,
+  .qr-halo-blue,
+  .qr-floor-red,
+  .qr-floor-blue,
+  .qr-seg-lens {
+    animation: none !important;
+  }
+}
+
 /* ── 시네마틱 마감 ──────────────────────────────────
    가장자리를 눌러 화면 가운데로 시선을 모으고,
    아주 옅은 필름 그레인으로 CG 티를 뺍니다. 둘 다 움직이지 않습니다. */
