@@ -262,6 +262,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
           {phase >= 3 && (
             <motion.button
               onClick={toPunch}
+              onTap={toPunch}
               data-role="alarm-next"
               disabled={phase < 4}
               className="mt-[clamp(14px,2.4vh,26px)] h-[52px] w-full rounded-sm bg-white text-[17px] font-bold text-[#0a0b12]"
@@ -323,6 +324,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
             */}
             <motion.button
               onClick={goQuestion}
+              onTap={goQuestion}
               data-role="punch-next"
               className="mt-9 h-14 w-full rounded-sm bg-white text-[17px] font-bold text-[#0a0b12]"
               whileTap={{ scale: 0.97 }}
@@ -373,6 +375,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
 
             <motion.button
               onClick={() => setStage('after')}
+              onTap={() => setStage('after')}
               data-role="question-next"
               className="mt-10 h-14 w-full rounded-sm border border-white/45 text-[17px] font-bold text-white active:bg-white/10"
               whileTap={{ scale: 0.97 }}
@@ -459,6 +462,7 @@ export default function RevealScreen({ answers, onNext }: Props) {
 
           <motion.button
             onClick={onNext}
+            onTap={onNext}
             data-role="after-next"
             className="mt-10 h-14 w-full border border-white/40 text-[17px] font-bold text-white active:bg-white/10"
             whileTap={{ scale: 0.97 }}
